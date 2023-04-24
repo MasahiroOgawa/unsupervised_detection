@@ -8,6 +8,7 @@ import tensorflow as tf
 from keras.utils.generic_utils import Progbar
 from models.adversarial_learner import AdversarialLearner
 from models.utils.general_utils import postprocess_mask, postprocess_image, compute_boundary_score
+from models.utils.flow_utils import flow_to_image
 
 from common_flags import FLAGS
 
@@ -100,6 +101,12 @@ def _test_masks():
 
                     preprocessed_bgr = postprocess_image(inference['input_image'][batch_num])
                     preprocessed_mask = postprocess_mask(out_mask)
+
+                    # save flow image. predicted flow is named gt_flow.
+                    estim_flow_batch = inference['gt_flow']
+                    estim_flow = flow_to_image(estim_flow_batch)[batch_num]
+                    estim_flow = cv2.resize(estim_flow, (des_width, des_height))
+                    cv2.imwrite(os.path.join(save_dir, 'flow_{}.png'.format(len(CategoryIou[category]))), estim_flow)
 
                     # Overlap images
                     results = cv2.addWeighted(preprocessed_bgr, 0.5,
