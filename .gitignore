@@ -1,9 +1,10 @@
-results/*
-*.pyc
-*/.ropeproject/*
-*.ropeproject/*
-download/*
-*.ipynb
+results/
+*/.ropeproject/
+*.ropeproject/
+download/
 .ipynb_checkpoints/
+.idea/
+*.pyc
+*.ipynb
 *~
 *.orig
