@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": "true",
+            "args": ["--dataset=DAVIS2016",
+            "--ckpt_file=${workspaceFolder}/download/unsupervised_detection_models/davis_best_model/model.best",
+            "--flow_ckpt=${workspaceFolder}/download/pwcnet-lg-6-2-multisteps-chairsthingsmix/pwcnet.ckpt-595000.data-00000-of-00001",
+            "--test_crop=0.9",
+            "--test_temporal_shift=1",
+            "--root_dir=${workspaceFolder}/download/DAVIS",
+            "--generate_visualization=True",
+            "--test_save_dir=${workspaceFolder}/results/DAVIS"]
+        }
+    ]
+}
