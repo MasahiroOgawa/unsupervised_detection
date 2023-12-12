@@ -126,17 +126,19 @@ def _test_masks():
 
             progbar.update(step)
 
+        # save final result to a text file
         tot_ious = 0
         tot_maes = 0
         per_cat_iou = []
-        for cat, list_iou in CategoryIou.items():
-            print("Category {}: IoU is {} and MAE is {}".format(cat, np.mean(list_iou), np.mean(CategoryMae[cat])))
-            tot_ious += np.sum(list_iou)
-            tot_maes += np.sum(CategoryMae[cat])
-            per_cat_iou.append(np.mean(list_iou))
-        print("The Average over the dataset: IoU is {} and MAE is {}".format(tot_ious/float(i), tot_maes/float(i)))
-        print("The Average over sequences IoU is {}".format(np.mean(per_cat_iou)))
-        print("Success: Processed {} frames".format(i))
+        with open(os.path.join(FLAGS.test_save_dir, 'result.txt'), 'w') as f:
+            for cat, list_iou in CategoryIou.items():
+                print("Category {}: IoU is {} and MAE is {}".format(cat, np.mean(list_iou), np.mean(CategoryMae[cat])))
+                tot_ious += np.sum(list_iou)
+                tot_maes += np.sum(CategoryMae[cat])
+                per_cat_iou.append(np.mean(list_iou))
+            print("The Average over the dataset: IoU is {} and MAE is {}".format(tot_ious/float(i), tot_maes/float(i)), file=f)
+            print("The Average over sequences IoU is {}".format(np.mean(per_cat_iou)), file=f)
+            print("Success: Processed {} frames".format(i), file=f)
 
 def main(argv):
     # Utility main to load flags
