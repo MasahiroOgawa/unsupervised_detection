@@ -117,7 +117,8 @@ def compute_all_IoU(pred_masks, gt_masks, threshold=0.1):
 def compute_boundary_score(segmentation):
     """
     This score indicates how many image borders the segmentation
-    mask occupies. If lower than a threshold, then it indicates foreground,
+    mask occupies (percentage of 2 pixel border occupation of the mask). 
+    If lower than a threshold, then it indicates foreground,
     else background. The threshold is generally set to 0.6, which means
     that to be background, the mask has to (approx.) occupy more than two borders.
     """

@@ -132,7 +132,7 @@ def _test_masks():
         per_cat_iou = []
         with open(os.path.join(FLAGS.test_save_dir, 'result.txt'), 'w') as f:
             for cat, list_iou in CategoryIou.items():
-                print("Category {}: IoU is {} and MAE is {}".format(cat, np.mean(list_iou), np.mean(CategoryMae[cat])))
+                print("Category {}: IoU is {} and MAE is {}".format(cat, np.mean(list_iou), np.mean(CategoryMae[cat])), file=f)
                 tot_ious += np.sum(list_iou)
                 tot_maes += np.sum(CategoryMae[cat])
                 per_cat_iou.append(np.mean(list_iou))
