@@ -9,36 +9,13 @@ from keras.utils.generic_utils import Progbar
 from models.adversarial_learner import AdversarialLearner
 from models.utils.general_utils import postprocess_mask, postprocess_image, compute_boundary_score
 from models.utils.flow_utils import flow_to_image
-
 from common_flags import FLAGS
+from test_generator import compute_IoU, compute_mae
+
 
 des_width = 640
 des_height = 384
 mask_threshold = 0.6
-
-
-def compute_IoU(gt_mask, pred_mask_f, threshold=0.1):
-    gt_mask = gt_mask.astype(np.bool)
-    pred_mask = pred_mask_f > threshold
-    pred_mask_compl = np.logical_not(pred_mask)
-
-    # Compute the score to disambiguate foreground from background
-    boundary_score = compute_boundary_score(pred_mask)
-    if boundary_score < mask_threshold:
-        annotation = pred_mask
-    else:
-        annotation = pred_mask_compl
-
-    if np.isclose(np.sum(annotation), 0) and np.isclose(np.sum(gt_mask), 0):
-        return 1, annotation
-    else:
-        return np.sum((annotation & gt_mask)) / \
-            np.sum((annotation | gt_mask), dtype=np.float32), annotation
-
-
-def compute_mae(gt_mask, pred_mask_f):
-    mae = np.mean(np.abs(gt_mask - pred_mask_f))
-    return mae
 
 
 def _test_masks():
