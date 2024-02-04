@@ -8,7 +8,6 @@ import tensorflow as tf
 from keras.utils.generic_utils import Progbar
 from models.adversarial_learner import AdversarialLearner
 from models.utils.general_utils import postprocess_mask, postprocess_image, compute_boundary_score
-from models.utils.flow_utils import flow_to_image
 from common_flags import FLAGS
 from test_generator import compute_IoU, compute_mae
 
@@ -30,7 +29,7 @@ def _test_masks():
     with sv.managed_session() as sess:
         sess.run(learner.test_iterator.initializer)
 
-        n_steps = int(np.ceil(learner.test_samples / float(FLAGS.batch_size)))
+        n_steps = int(np.ceil(learner.test_samples))
 
         progbar = Progbar(target=n_steps)
 
