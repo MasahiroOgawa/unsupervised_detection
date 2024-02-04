@@ -21,7 +21,6 @@ mask_threshold = 0.6
 def _test_masks():
     learner = AdversarialLearner()
     learner.setup_inference(FLAGS, aug_test=False)
-    saver = tf.train.Saver([var for var in tf.trainable_variables()])
     CategoryIou = {}
     CategoryMae = {}
     # manages multi-threading
@@ -29,13 +28,6 @@ def _test_masks():
                              save_summaries_secs=0,
                              saver=None)
     with sv.managed_session() as sess:
-        checkpoint = FLAGS.ckpt_file
-        if checkpoint:
-            saver.restore(sess, checkpoint)
-            print("Resume model from checkpoint {}".format(checkpoint))
-        else:
-            raise IOError("Checkpoint file not found")
-
         sess.run(learner.test_iterator.initializer)
 
         n_steps = int(np.ceil(learner.test_samples / float(FLAGS.batch_size)))
@@ -88,14 +80,6 @@ def _test_masks():
                         inference['input_image'][batch_num])
                     preprocessed_mask = postprocess_mask(out_mask)
 
-                    # save flow image. predicted flow is named gt_flow.
-                    estim_flow_batch = inference['gt_flow']
-                    estim_flow = flow_to_image(estim_flow_batch)[batch_num]
-                    estim_flow = cv2.resize(
-                        estim_flow, (des_width, des_height))
-                    cv2.imwrite(os.path.join(save_dir, 'flow_{:08d}.png'.format(
-                        len(CategoryIou[category]))), estim_flow)
-
                     # Overlap images
                     results = cv2.addWeighted(preprocessed_bgr, 0.5,
                                               preprocessed_mask, 0.4, 0)
@@ -106,8 +90,7 @@ def _test_masks():
                     matlab_fname = os.path.join(save_dir,
                                                 'result_{}.mat'.format(len(CategoryIou[category])))
                     sio.savemat(matlab_fname,
-                                {'flow': inference['gt_flow'][batch_num],
-                                 'img1': cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
+                                {'img1': cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
                                  # inference['gen_masks'][batch_num],
                                  'pred_mask': out_mask,
                                  'gt_mask': inference['gt_masks'][batch_num]})
