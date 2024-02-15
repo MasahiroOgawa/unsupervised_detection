@@ -29,16 +29,17 @@ def compute_IoU(gt_mask, pred_mask_f, threshold=0.1):
     else:
         annotation = pred_mask_compl
 
-    if np.isclose(np.sum(annotation),0) and np.isclose(np.sum(gt_mask),0):
+    if np.isclose(np.sum(annotation), 0) and np.isclose(np.sum(gt_mask), 0):
         return 1, annotation
     else:
         return np.sum((annotation & gt_mask)) / \
-                np.sum((annotation | gt_mask),dtype=np.float32), annotation
+            np.sum((annotation | gt_mask), dtype=np.float32), annotation
 
 
 def compute_mae(gt_mask, pred_mask_f):
     mae = np.mean(np.abs(gt_mask - pred_mask_f))
     return mae
+
 
 def _test_masks():
     learner = AdversarialLearner()
@@ -72,17 +73,19 @@ def _test_masks():
             try:
                 inference = learner.inference(sess)
             except tf.errors.OutOfRangeError:
-                  print("End of testing dataset")  # ==> "End of dataset"
-                  break
+                print("End of testing dataset")  # ==> "End of dataset"
+                break
             # Now write images in the test folder
             for batch_num in range(inference['input_image'].shape[0]):
 
                 # select mask
                 generated_mask = inference['gen_masks'][batch_num]
                 gt_mask = inference['gt_masks'][batch_num]
-                category = inference['img_fname'][batch_num].decode("utf-8").split('/')[-2]
+                category = inference['img_fname'][batch_num].decode(
+                    "utf-8").split('/')[-2]
 
-                iou, out_mask = compute_IoU(gt_mask=gt_mask, pred_mask_f=generated_mask)
+                iou, out_mask = compute_IoU(
+                    gt_mask=gt_mask, pred_mask_f=generated_mask)
                 mae = compute_mae(gt_mask=gt_mask, pred_mask_f=out_mask)
                 try:
                     CategoryIou[category].append(iou)
@@ -97,32 +100,35 @@ def _test_masks():
                     if not os.path.isdir(save_dir):
                         os.mkdir(save_dir)
                     filename = os.path.join(save_dir,
-                                              "frame_{:08d}.png".format(len(CategoryIou[category])))
+                                            "frame_{:08d}.png".format(len(CategoryIou[category])))
 
-                    preprocessed_bgr = postprocess_image(inference['input_image'][batch_num])
+                    preprocessed_bgr = postprocess_image(
+                        inference['input_image'][batch_num])
                     preprocessed_mask = postprocess_mask(out_mask)
 
                     # save flow image. predicted flow is named gt_flow.
                     estim_flow_batch = inference['gt_flow']
                     estim_flow = flow_to_image(estim_flow_batch)[batch_num]
-                    estim_flow = cv2.resize(estim_flow, (des_width, des_height))
-                    cv2.imwrite(os.path.join(save_dir, 'flow_{:08d}.png'.format(len(CategoryIou[category]))), estim_flow)
+                    estim_flow = cv2.resize(
+                        estim_flow, (des_width, des_height))
+                    cv2.imwrite(os.path.join(save_dir, 'flow_{:08d}.png'.format(
+                        len(CategoryIou[category]))), estim_flow)
 
                     # Overlap images
                     results = cv2.addWeighted(preprocessed_bgr, 0.5,
-                                                  preprocessed_mask, 0.4, 0)
+                                              preprocessed_mask, 0.4, 0)
                     results = cv2.resize(results, (des_width, des_height))
 
                     cv2.imwrite(filename, results)
 
                     matlab_fname = os.path.join(save_dir,
-                                            'result_{}.mat'.format(len(CategoryIou[category])))
+                                                'result_{}.mat'.format(len(CategoryIou[category])))
                     sio.savemat(matlab_fname,
-                                {'flow':inference['gt_flow'][batch_num],
-                                 'img1':cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
-                                 'pred_mask': out_mask, #inference['gen_masks'][batch_num],
-                                 'gt_mask': inference['gt_masks'][batch_num]} )
-                i+=1
+                                {'flow': inference['gt_flow'][batch_num],
+                                 'img1': cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
+                                 'pred_mask': out_mask,
+                                 'gt_mask': inference['gt_masks'][batch_num]})
+                i += 1
 
             progbar.update(step)
 
@@ -132,22 +138,27 @@ def _test_masks():
         per_cat_iou = []
         with open(os.path.join(FLAGS.test_save_dir, 'result.txt'), 'w') as f:
             for cat, list_iou in CategoryIou.items():
-                print("Category {}: IoU is {} and MAE is {}".format(cat, np.mean(list_iou), np.mean(CategoryMae[cat])), file=f)
+                print("Category {}: IoU is {} and MAE is {}".format(
+                    cat, np.mean(list_iou), np.mean(CategoryMae[cat])), file=f)
                 tot_ious += np.sum(list_iou)
                 tot_maes += np.sum(CategoryMae[cat])
                 per_cat_iou.append(np.mean(list_iou))
-            print("The Average over the dataset: IoU is {} and MAE is {}".format(tot_ious/float(i), tot_maes/float(i)), file=f)
-            print("The Average over sequences IoU is {}".format(np.mean(per_cat_iou)), file=f)
+            print("The Average over the dataset: IoU is {} and MAE is {}".format(
+                tot_ious/float(i), tot_maes/float(i)), file=f)
+            print("The Average over sequences IoU is {}".format(
+                np.mean(per_cat_iou)), file=f)
             print("Success: Processed {} frames".format(i), file=f)
+
 
 def main(argv):
     # Utility main to load flags
     try:
-      argv = FLAGS(argv)  # parse flags
+        argv = FLAGS(argv)  # parse flags
     except gflags.FlagsError:
-      print ('Usage: %s ARGS\\n%s' % (sys.argv[0], FLAGS))
-      sys.exit(1)
+        print('Usage: %s ARGS\\n%s' % (sys.argv[0], FLAGS))
+        sys.exit(1)
     _test_masks()
+
 
 if __name__ == "__main__":
     main(sys.argv)

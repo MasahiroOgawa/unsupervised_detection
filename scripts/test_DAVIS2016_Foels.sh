@@ -27,8 +27,9 @@ echo "[INFO] finished downloading."
 
 echo "[INFO] start running a test..."
 mkdir -p ${RESULT_DIR}
-python3 test_segmentator.py \
+python3 test_movobjextractor.py \
 --dataset=DAVIS2016 \
+--batch_size=1 \
 --test_crop=0.9 \
 --test_temporal_shift=1 \
 --root_dir=$DATASET_FILE \
