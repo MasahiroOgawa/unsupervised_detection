@@ -69,8 +69,15 @@ class DataLoader:
         self.fname_batch = fname_batch
         self.test_samples = reader.val_samples
         self.gt_masks = gt_mask_batch
+        self.test_iter = test_iter
 
         print(f"[INFO] image_batch shape: {self.image_batch.shape}")
+
+    def get_data(self, sess):
+        # transform tensor to numpy array
+        fetches = {'image_batch': self.image_batch,
+                   'gt_masks': self.gt_masks, 'fname_batch': self.fname_batch}
+        return sess.run(fetches)
 
 
 def _test_masks():
@@ -81,88 +88,96 @@ def _test_masks():
     data_loader.read_data()
 
     print(f"[INFO] batch_size: {FLAGS.batch_size}")
-    n_steps = int(np.ceil(data_loader.test_samples / float(FLAGS.batch_size)))
-    progbar = Progbar(target=n_steps)
 
-    num_processed_frames = 0
-    for step in range(n_steps):
-        try:
-            # inference = my own result
-            pass
-        except tf.errors.OutOfRangeError:
-            print("End of testing dataset")
-            break
+    sv = tf.train.Supervisor(logdir=FLAGS.test_save_dir,
+                             save_summaries_secs=0,
+                             saver=None)
+    with sv.managed_session() as sess:
+        sess.run(data_loader.test_iter.initializer)
+        n_steps = int(
+            np.ceil(data_loader.test_samples / float(FLAGS.batch_size)))
+        progbar = Progbar(target=n_steps)
 
-        # Now write images in the test folder
-        for batch_num in range(data_loader.image_batch.shape[0]):
-            # select mask
-            # this should be inference['gen_masks'][batch_num]
-            generated_mask = data_loader.gt_masks[batch_num]
-            gt_mask = data_loader.gt_masks[batch_num]
-            category = data_loader.fname_batch[batch_num].decode(
-                "utf-8").split('/')[-2]
-
-            # debug. display each mask
-            cv2.imshow('gt_mask', gt_mask)
-            cv2.imshow('generated_mask', generated_mask)
-            cv2.waitKey(0)
-
-            iou, out_mask = compute_IoU(
-                gt_mask=gt_mask, pred_mask_f=generated_mask)
-            mae = compute_mae(gt_mask=gt_mask, pred_mask_f=out_mask)
+        num_processed_frames = 0
+        for step in range(n_steps):
             try:
-                CategoryIou[category].append(iou)
-                CategoryMae[category].append(mae)
-            except:
-                CategoryIou[category] = [iou]
-                CategoryMae[category] = [mae]
+                data = data_loader.get_data(sess)
+                # inference = my own result
+                pass
+            except tf.errors.OutOfRangeError:
+                print("End of testing dataset")
+                break
 
-            if FLAGS.generate_visualization:
-                # Verbose image generation
-                save_dir = os.path.join(FLAGS.test_save_dir, category)
-                if not os.path.isdir(save_dir):
-                    os.mkdir(save_dir)
-                filename = os.path.join(save_dir,
-                                        "frame_{:08d}.png".format(len(CategoryIou[category])))
+            # Now write images in the test folder
+            for batch_num in range(FLAGS.batch_size):
+                # select mask
+                # this should be inference['gen_masks'][batch_num]
+                generated_mask = data['gt_masks'][batch_num]
+                gt_mask = data['gt_masks'][batch_num]
+                category = data['fname_batch'][batch_num].decode(
+                    "utf-8").split('/')[-2]
 
-                preprocessed_bgr = postprocess_image(
-                    data_loader.image_batch[batch_num])
-                preprocessed_mask = postprocess_mask(out_mask)
+                # debug. display each mask
+                cv2.imshow('gt_mask', gt_mask)
+                cv2.imshow('generated_mask', generated_mask)
+                cv2.waitKey(0)
 
-                # Overlap images
-                results = cv2.addWeighted(preprocessed_bgr, 0.5,
-                                          preprocessed_mask, 0.4, 0)
-                results = cv2.resize(results, (des_width, des_height))
+                iou, out_mask = compute_IoU(
+                    gt_mask=gt_mask, pred_mask_f=generated_mask)
+                mae = compute_mae(gt_mask=gt_mask, pred_mask_f=out_mask)
+                try:
+                    CategoryIou[category].append(iou)
+                    CategoryMae[category].append(mae)
+                except:
+                    CategoryIou[category] = [iou]
+                    CategoryMae[category] = [mae]
 
-                cv2.imwrite(filename, results)
+                if FLAGS.generate_visualization:
+                    # Verbose image generation
+                    save_dir = os.path.join(FLAGS.test_save_dir, category)
+                    if not os.path.isdir(save_dir):
+                        os.mkdir(save_dir)
+                    filename = os.path.join(save_dir,
+                                            "frame_{:08d}.png".format(len(CategoryIou[category])))
 
-                matlab_fname = os.path.join(save_dir,
-                                            'result_{}.mat'.format(len(CategoryIou[category])))
-                sio.savemat(matlab_fname,
-                            {'img': cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
-                             'pred_mask': out_mask,
-                             'gt_mask': gt_mask})
-            num_processed_frames += 1
+                    preprocessed_bgr = postprocess_image(
+                        data['image_batch'][batch_num])
+                    preprocessed_mask = postprocess_mask(out_mask)
 
-        progbar.update(step)
+                    # Overlap images
+                    results = cv2.addWeighted(preprocessed_bgr, 0.5,
+                                              preprocessed_mask, 0.4, 0)
+                    results = cv2.resize(results, (des_width, des_height))
 
-    # save final result to a text file
-    tot_ious = 0
-    tot_maes = 0
-    per_cat_iou = []
-    with open(os.path.join(FLAGS.test_save_dir, 'result.txt'), 'w') as f:
-        for cat, list_iou in CategoryIou.items():
-            print("Category {}: IoU is {} and MAE is {}".format(
-                cat, np.mean(list_iou), np.mean(CategoryMae[cat])), file=f)
-            tot_ious += np.sum(list_iou)
-            tot_maes += np.sum(CategoryMae[cat])
-            per_cat_iou.append(np.mean(list_iou))
-        print("The Average over the dataset: IoU is {} and MAE is {}".format(
-            tot_ious/float(num_processed_frames), tot_maes/float(num_processed_frames)), file=f)
-        print("The Average over sequences IoU is {}".format(
-            np.mean(per_cat_iou)), file=f)
-        print("Success: Processed {} frames".format(
-            num_processed_frames), file=f)
+                    cv2.imwrite(filename, results)
+
+                    matlab_fname = os.path.join(save_dir,
+                                                'result_{}.mat'.format(len(CategoryIou[category])))
+                    sio.savemat(matlab_fname,
+                                {'img': cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
+                                 'pred_mask': out_mask,
+                                 'gt_mask': gt_mask})
+                num_processed_frames += 1
+
+            progbar.update(step)
+
+        # save final result to a text file
+        tot_ious = 0
+        tot_maes = 0
+        per_cat_iou = []
+        with open(os.path.join(FLAGS.test_save_dir, 'result.txt'), 'w') as f:
+            for cat, list_iou in CategoryIou.items():
+                print("Category {}: IoU is {} and MAE is {}".format(
+                    cat, np.mean(list_iou), np.mean(CategoryMae[cat])), file=f)
+                tot_ious += np.sum(list_iou)
+                tot_maes += np.sum(CategoryMae[cat])
+                per_cat_iou.append(np.mean(list_iou))
+            print("The Average over the dataset: IoU is {} and MAE is {}".format(
+                tot_ious/float(num_processed_frames), tot_maes/float(num_processed_frames)), file=f)
+            print("The Average over sequences IoU is {}".format(
+                np.mean(per_cat_iou)), file=f)
+            print("Success: Processed {} frames".format(
+                num_processed_frames), file=f)
 
 
 def main(argv):
