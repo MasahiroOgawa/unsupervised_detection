@@ -89,6 +89,7 @@ def _test_masks():
 
     print(f"[INFO] batch_size: {FLAGS.batch_size}")
 
+    # we need session to transform data loader's output tensor to numpy array.
     sv = tf.train.Supervisor(logdir=FLAGS.test_save_dir,
                              save_summaries_secs=0,
                              saver=None)
@@ -112,6 +113,7 @@ def _test_masks():
             for batch_num in range(FLAGS.batch_size):
                 # select mask
                 # this should be inference['gen_masks'][batch_num]
+                # generated_mask.shape = [row=192,col=384,channel=1], dtype=fload32.
                 generated_mask = data['gt_masks'][batch_num]
                 gt_mask = data['gt_masks'][batch_num]
                 category = data['fname_batch'][batch_num].decode(
