@@ -104,6 +104,7 @@ def _test_masks():
             try:
                 data = data_loader.get_data(sess)
                 # inference = my own result
+                # Note: inference should be resized and /255 using reader's preprocess_mask.
                 pass
             except tf.errors.OutOfRangeError:
                 print("End of testing dataset")
