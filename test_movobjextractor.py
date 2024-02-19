@@ -103,8 +103,6 @@ def _test_masks():
         for step in range(n_steps):
             try:
                 data = data_loader.get_data(sess)
-                # inference = my own result
-                # Note: inference should be resized and /255 using reader's preprocess_mask.
                 pass
             except tf.errors.OutOfRangeError:
                 print("End of testing dataset")
@@ -112,6 +110,12 @@ def _test_masks():
 
             # Now write images in the test folder
             for batch_num in range(FLAGS.batch_size):
+                # get file name of the image
+                img_fname = data['fname_batch'][batch_num].decode("utf-8")
+                print(f"[INFO] process image: {img_fname}")
+                # inference = my own result
+                # Note: inference should be resized and /255 using reader's preprocess_mask.
+
                 # select mask
                 # this should be inference['gen_masks'][batch_num]
                 # generated_mask.shape = [row=192,col=384,channel=1], dtype=fload32.
