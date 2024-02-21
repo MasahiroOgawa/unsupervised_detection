@@ -54,8 +54,6 @@ class DataLoader:
             print(f"[INFO] test_batch : {test_batch}")
 
             image_batch, gt_mask_batch, fname_batch = test_batch[0], test_batch[2], test_batch[3]
-            print(
-                f"[INFO] image_batch shape before reshape: {image_batch.shape}")
 
         # reshape
         image_batch = tf.image.resize_images(image_batch, [self.config.img_height,
@@ -78,6 +76,29 @@ class DataLoader:
         fetches = {'image_batch': self.image_batch,
                    'gt_masks': self.gt_masks, 'fname_batch': self.fname_batch}
         return sess.run(fetches)
+
+
+def get_foels_outfname(img_fname):
+    # get file name of the image
+    print(f"[INFO] process image: {img_fname}")
+    base_imgfname = os.path.basename(img_fname)
+    print(f"[INFO] base_imgfname: {base_imgfname}")
+    category = img_fname.split('/')[-2]
+    foels_basefname = base_imgfname.replace('.jpg', '_mask.png')
+    cur_script_dir = os.path.dirname(os.path.realpath(__file__))
+    foels_outfname = os.path.join(
+        cur_script_dir, "../../../output", category, "moving_object", foels_basefname)
+    print(f"[INFO] foels_outfname: {foels_outfname}")
+    return foels_outfname
+
+
+def get_mask(mask_fname, width, height):
+    # Note: inference should be resized and /255 using reader's preprocess_mask.
+    # generated_mask.shape = [row=192,col=384,channel=1], dtype=fload32.
+    mask = cv2.imread(mask_fname, cv2.IMREAD_GRAYSCALE)
+    mask = cv2.resize(mask, (width, height))
+    mask = mask.astype(np.float32) / 255.0
+    return mask
 
 
 def _test_masks():
@@ -110,19 +131,13 @@ def _test_masks():
 
             # Now write images in the test folder
             for batch_num in range(FLAGS.batch_size):
-                # get file name of the image
                 img_fname = data['fname_batch'][batch_num].decode("utf-8")
-                print(f"[INFO] process image: {img_fname}")
-                # inference = my own result
-                # Note: inference should be resized and /255 using reader's preprocess_mask.
+                foels_outfname = get_foels_outfname(img_fname)
 
-                # select mask
-                # this should be inference['gen_masks'][batch_num]
-                # generated_mask.shape = [row=192,col=384,channel=1], dtype=fload32.
-                generated_mask = data['gt_masks'][batch_num]
+                generated_mask = get_mask(
+                    foels_outfname, FLAGS.img_width, FLAGS.img_height)
                 gt_mask = data['gt_masks'][batch_num]
-                category = data['fname_batch'][batch_num].decode(
-                    "utf-8").split('/')[-2]
+                category = img_fname.split('/')[-2]
 
                 # debug. display each mask
                 cv2.imshow('gt_mask', gt_mask)
