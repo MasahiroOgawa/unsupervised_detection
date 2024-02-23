@@ -98,6 +98,9 @@ def get_mask(mask_fname, width, height):
     mask = cv2.imread(mask_fname, cv2.IMREAD_GRAYSCALE)
     mask = cv2.resize(mask, (width, height))
     mask = mask.astype(np.float32) / 255.0
+    # add channel dimension
+    mask = np.expand_dims(mask, axis=2)
+    print(f"[INFO] mask.shape={mask.shape}")
     return mask
 
 
