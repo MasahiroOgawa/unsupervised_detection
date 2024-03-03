@@ -100,7 +100,6 @@ def get_mask(mask_fname, width, height):
     mask = mask.astype(np.float32) / 255.0
     # add channel dimension
     mask = np.expand_dims(mask, axis=2)
-    print(f"[INFO] mask.shape={mask.shape}")
     return mask
 
 
@@ -141,11 +140,6 @@ def _test_masks():
                     foels_outfname, FLAGS.img_width, FLAGS.img_height)
                 gt_mask = data['gt_masks'][batch_num]
                 category = img_fname.split('/')[-2]
-
-                # debug. display each mask
-                cv2.imshow('gt_mask', gt_mask)
-                cv2.imshow('generated_mask', generated_mask)
-                cv2.waitKey(0)
 
                 iou, out_mask = compute_IoU(
                     gt_mask=gt_mask, pred_mask_f=generated_mask)
