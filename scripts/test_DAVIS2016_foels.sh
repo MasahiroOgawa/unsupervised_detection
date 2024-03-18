@@ -9,6 +9,9 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 DOWNLOAD_DIR="${SCRIPT_DIR}/../download"
 DATASET_FILE="${DOWNLOAD_DIR}/DAVIS"
 RESULT_DIR="${SCRIPT_DIR}/../results/Foels/DAVIS2016"
+ # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
+ # 3: debug with detailed image but without stopping, 4: slow (1min/frame) debug image
+LOG_LEVEL=4
 
 
 echo "[INFO] start downloading data..."
@@ -37,5 +40,6 @@ python3 test_movobjextractor.py \
 --test_temporal_shift=1 \
 --root_dir=$DATASET_FILE \
 --generate_visualization=True \
---test_save_dir=${RESULT_DIR}
+--test_save_dir=${RESULT_DIR} \
+--log_level=${LOG_LEVEL}
 echo "[INFO] finished the test."

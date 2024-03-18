@@ -118,8 +118,11 @@ def _test_masks():
                              saver=None)
     with sv.managed_session() as sess:
         sess.run(data_loader.test_iter.initializer)
+        # currently Foels need t, t+1 frames to compute optical flow,
+        # so we need to skip the last frame.
+        # That's why we use test_samples-1.
         n_steps = int(
-            np.ceil(data_loader.test_samples / float(FLAGS.batch_size)))
+            np.ceil((data_loader.test_samples-1) / float(FLAGS.batch_size)))
         progbar = Progbar(target=n_steps)
 
         num_processed_frames = 0
@@ -135,6 +138,12 @@ def _test_masks():
             for batch_num in range(FLAGS.batch_size):
                 img_fname = data['fname_batch'][batch_num].decode("utf-8")
                 foels_outfname = get_foels_outfname(img_fname)
+                if FLAGS.log_level > 0:
+                    print(f"[INFO] img_fname: {img_fname}")
+                    print(f"[INFO] foels_outfname: {foels_outfname}")
+                    if FLAGS.log_level > 2:
+                        cv2.imshow('input_image', img_fname)
+                        cv2.imshow('gt_mask', foels_outfname)
 
                 generated_mask = get_mask(
                     foels_outfname, FLAGS.img_width, FLAGS.img_height)
@@ -169,6 +178,10 @@ def _test_masks():
                     results = cv2.resize(results, (des_width, des_height))
 
                     cv2.imwrite(filename, results)
+                    if FLAGS.log_level > 2:
+                        cv2.imshow('result', results)
+                        if FLAGS.log_level > 3:
+                            cv2.waitKey(0)
 
                     matlab_fname = os.path.join(save_dir,
                                                 'result_{}.mat'.format(len(CategoryIou[category])))
