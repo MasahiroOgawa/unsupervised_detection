@@ -120,7 +120,6 @@ def _test_masks():
                     results = cv2.resize(results, (des_width, des_height))
 
                     cv2.imwrite(filename, results)
-
                     matlab_fname = os.path.join(save_dir,
                                                 'result_{}.mat'.format(len(CategoryIou[category])))
                     sio.savemat(matlab_fname,
