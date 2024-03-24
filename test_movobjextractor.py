@@ -86,10 +86,10 @@ def get_foels_maskfname(img_fname):
     category = img_fname.split('/')[-2]
     foels_basefname = base_imgfname.replace('.jpg', '_mask.png')
     cur_script_dir = os.path.dirname(os.path.realpath(__file__))
-    foels_outfname = os.path.join(
+    foels_maskfname = os.path.join(
         cur_script_dir, "../../../output", category, "moving_object", foels_basefname)
-    print(f"[INFO] foels_outfname: {foels_outfname}")
-    return foels_outfname
+    print(f"[INFO] foels_maskfname: {foels_maskfname}")
+    return foels_maskfname
 
 
 def get_mask(mask_fname, width, height):
@@ -139,8 +139,6 @@ def _test_masks():
                 inimg_fname = data['fname_batch'][batch_num].decode("utf-8")
                 foels_maskfname = get_foels_maskfname(inimg_fname)
                 if FLAGS.log_level > 0:
-                    print(f"[INFO] img_fname: {inimg_fname}")
-                    print(f"[INFO] foels_maskfname: {foels_maskfname}")
                     if FLAGS.log_level > 2:
                         in_img = cv2.imread(inimg_fname)
                         cv2.imshow('input_image', in_img)
@@ -167,8 +165,8 @@ def _test_masks():
                     save_dir = os.path.join(FLAGS.test_save_dir, category)
                     if not os.path.isdir(save_dir):
                         os.mkdir(save_dir)
-                    filename = os.path.join(save_dir,
-                                            "frame_{:08d}.png".format(len(CategoryIou[category])))
+                    save_fname = os.path.join(save_dir,
+                                              "frame_{:08d}.png".format(len(CategoryIou[category])))
 
                     preprocessed_bgr = postprocess_image(
                         data['image_batch'][batch_num])
@@ -179,7 +177,7 @@ def _test_masks():
                                               preprocessed_mask, 0.4, 0)
                     results = cv2.resize(results, (des_width, des_height))
 
-                    cv2.imwrite(filename, results)
+                    cv2.imwrite(save_fname, results)
                     if FLAGS.log_level > 2:
                         cv2.imshow('result', results)
                         if FLAGS.log_level > 3:
