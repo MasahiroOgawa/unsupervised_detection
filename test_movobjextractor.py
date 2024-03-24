@@ -142,8 +142,10 @@ def _test_masks():
                     print(f"[INFO] img_fname: {img_fname}")
                     print(f"[INFO] foels_outfname: {foels_outfname}")
                     if FLAGS.log_level > 2:
-                        cv2.imshow('input_image', img_fname)
-                        cv2.imshow('gt_mask', foels_outfname)
+                        in_img = cv2.imread(img_fname)
+                        cv2.imshow('input_image', in_img)
+                        foels_img = cv2.imread(foels_outfname)
+                        cv2.imshow('gt_mask', foels_img)
 
                 generated_mask = get_mask(
                     foels_outfname, FLAGS.img_width, FLAGS.img_height)
