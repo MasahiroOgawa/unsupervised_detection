@@ -78,7 +78,7 @@ class DataLoader:
         return sess.run(fetches)
 
 
-def get_foels_outfname(img_fname):
+def get_foels_maskfname(img_fname):
     # get file name of the image
     print(f"[INFO] process image: {img_fname}")
     base_imgfname = os.path.basename(img_fname)
@@ -136,21 +136,21 @@ def _test_masks():
 
             # Now write images in the test folder
             for batch_num in range(FLAGS.batch_size):
-                img_fname = data['fname_batch'][batch_num].decode("utf-8")
-                foels_outfname = get_foels_outfname(img_fname)
+                inimg_fname = data['fname_batch'][batch_num].decode("utf-8")
+                foels_maskfname = get_foels_maskfname(inimg_fname)
                 if FLAGS.log_level > 0:
-                    print(f"[INFO] img_fname: {img_fname}")
-                    print(f"[INFO] foels_outfname: {foels_outfname}")
+                    print(f"[INFO] img_fname: {inimg_fname}")
+                    print(f"[INFO] foels_maskfname: {foels_maskfname}")
                     if FLAGS.log_level > 2:
-                        in_img = cv2.imread(img_fname)
+                        in_img = cv2.imread(inimg_fname)
                         cv2.imshow('input_image', in_img)
-                        foels_img = cv2.imread(foels_outfname)
-                        cv2.imshow('gt_mask', foels_img)
+                        foels_maskimg = cv2.imread(foels_maskfname)
+                        cv2.imshow('gt_mask', foels_maskimg)
 
                 generated_mask = get_mask(
-                    foels_outfname, FLAGS.img_width, FLAGS.img_height)
+                    foels_maskfname, FLAGS.img_width, FLAGS.img_height)
                 gt_mask = data['gt_masks'][batch_num]
-                category = img_fname.split('/')[-2]
+                category = inimg_fname.split('/')[-2]
 
                 iou, out_mask = compute_IoU(
                     gt_mask=gt_mask, pred_mask_f=generated_mask)
