@@ -38,7 +38,7 @@ python3 test_movobjextractor.py \
 --batch_size=1 \
 --test_crop=0.9 \
 --test_temporal_shift=1 \
---root_dir=$DATASET_FILE \
+--root_dir=${DATASET_FILE} \
 --generate_visualization=True \
 --test_save_dir=${RESULT_DIR} \
 --log_level=${LOG_LEVEL}
