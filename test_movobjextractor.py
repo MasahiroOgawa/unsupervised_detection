@@ -141,16 +141,12 @@ def _test_masks():
                 if FLAGS.log_level > 0:
                     if FLAGS.log_level > 2:
                         in_img_fromfname = cv2.imread(inimg_fname)
-                        cv2.imshow('in_img_fromfname', in_img_fromfname)
-                        foels_maskimg = cv2.imread(foels_maskfname)
-                        cv2.imshow('gt_mask', foels_maskimg)
-                        in_img = data['image_batch'][batch_num]
-                        cv2.imshow('in_img', in_img)
-
-                        foels_colormaskimg = cv2.cvtColor(
-                            foels_maskimg, cv2.COLOR_GRAY2BGR)
+                        in_img_fromfname = cv2.resize(
+                            in_img_fromfname, (FLAGS.img_width, FLAGS.img_height))
+                        foels_maskimg = cv2.imread(foels_maskfname) #color
+                        foels_maskimg = cv2.resize(foels_maskimg, (FLAGS.img_width, FLAGS.img_height))
                         comb_img = cv2.addWeighted(
-                            in_img, 0.5, foels_colormaskimg, 0.5, 0)
+                            in_img_fromfname, 0.5, foels_maskimg, 0.5, 0)
                         cv2.imshow('overlap', comb_img)
 
                 generated_mask = get_mask(
