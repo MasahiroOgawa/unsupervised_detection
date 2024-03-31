@@ -138,17 +138,6 @@ def _test_masks():
             for batch_num in range(FLAGS.batch_size):
                 inimg_fname = data['fname_batch'][batch_num].decode("utf-8")
                 foels_maskfname = get_foels_maskfname(inimg_fname)
-                if FLAGS.log_level > 0:
-                    if FLAGS.log_level > 2:
-                        in_img_fromfname = cv2.imread(inimg_fname)
-                        in_img_fromfname = cv2.resize(
-                            in_img_fromfname, (FLAGS.img_width, FLAGS.img_height))
-                        foels_maskimg = cv2.imread(foels_maskfname) #color
-                        foels_maskimg = cv2.resize(foels_maskimg, (FLAGS.img_width, FLAGS.img_height))
-                        comb_img = cv2.addWeighted(
-                            in_img_fromfname, 0.5, foels_maskimg, 0.5, 0)
-                        cv2.imshow('overlap', comb_img)
-
                 generated_mask = get_mask(
                     foels_maskfname, FLAGS.img_width, FLAGS.img_height)
                 gt_mask = data['gt_masks'][batch_num]
@@ -176,11 +165,27 @@ def _test_masks():
                         data['image_batch'][batch_num])
                     preprocessed_mask = postprocess_mask(out_mask)
 
-                    # debug
-                    cv2.imshow("second input image",
-                               data['image_batch'][batch_num])
-                    cv2.imshow("preprocessed_bgr", preprocessed_bgr)
-                    cv2.imshow("preprocessed_mask", preprocessed_mask)
+                    if FLAGS.log_level > 2:
+                        in_img_fromfname = cv2.imread(inimg_fname)
+                        in_img_fromfname = cv2.resize(
+                            in_img_fromfname, (des_width, des_height))
+                        foels_maskimg = cv2.imread(foels_maskfname) #color
+                        foels_maskimg = cv2.resize(
+                            foels_maskimg, (des_width, des_height))
+                        comb_img = cv2.addWeighted(
+                            in_img_fromfname, 0.5, foels_maskimg, 0.5, 0)
+                        cv2.imshow('overlap', comb_img)
+
+                        rsz_preprocessed_bgr = cv2.resize(
+                            preprocessed_bgr, (des_width, des_height))
+                        overlap_input = cv2.addWeighted(
+                            in_img_fromfname, 0.5, rsz_preprocessed_bgr, 0.5, 0)
+                        cv2.imshow('overlap_input', overlap_input)
+                        rsz_preprocessed_mask = cv2.resize(
+                            preprocessed_mask, (des_width, des_height))
+                        overlap_mask = cv2.addWeighted(
+                            foels_maskimg, 0.5, rsz_preprocessed_mask, 0.5, 0)
+                        cv2.imshow('overlap_mask', overlap_mask)
 
                     # Overlap images
                     results = cv2.addWeighted(preprocessed_bgr, 0.5,
