@@ -169,6 +169,7 @@ def _test_masks():
                         in_img_fromfname = cv2.imread(inimg_fname)
                         in_img_fromfname = cv2.resize(
                             in_img_fromfname, (des_width, des_height))
+                        cv2.imshow('in_img_fromfname', in_img_fromfname)
                         foels_maskimg = cv2.imread(foels_maskfname) #color
                         foels_maskimg = cv2.resize(
                             foels_maskimg, (des_width, des_height))
@@ -178,13 +179,14 @@ def _test_masks():
 
                         rsz_preprocessed_bgr = cv2.resize(
                             preprocessed_bgr, (des_width, des_height))
+                        cv2.imshow('rsz_preprocessed_bgr', rsz_preprocessed_bgr)
                         overlap_input = cv2.addWeighted(
-                            in_img_fromfname, 0.5, rsz_preprocessed_bgr, 0.5, 0)
+                            in_img_fromfname, 0.3, rsz_preprocessed_bgr, 0.5, 0)
                         cv2.imshow('overlap_input', overlap_input)
                         rsz_preprocessed_mask = cv2.resize(
                             preprocessed_mask, (des_width, des_height))
                         overlap_mask = cv2.addWeighted(
-                            foels_maskimg, 0.5, rsz_preprocessed_mask, 0.5, 0)
+                            foels_maskimg, 0.3, rsz_preprocessed_mask, 0.5, 0)
                         cv2.imshow('overlap_mask', overlap_mask)
 
                     # Overlap images

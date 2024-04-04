@@ -36,7 +36,7 @@ mkdir -p ${RESULT_DIR}
 python3 test_movobjextractor.py \
 --dataset=DAVIS2016 \
 --batch_size=1 \
---test_crop=0.9 \
+--test_crop=1.0 \
 --test_temporal_shift=1 \
 --root_dir=${DATASET_FILE} \
 --generate_visualization=True \
