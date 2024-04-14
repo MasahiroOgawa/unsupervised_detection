@@ -119,10 +119,9 @@ def _test_masks():
     with sv.managed_session() as sess:
         sess.run(data_loader.test_iter.initializer)
         # currently Foels need t, t+1 frames to compute optical flow,
-        # so we need to skip the last frame.
-        # That's why we use test_samples-1.
+        # so we need to skip the last frame of each sequence.
         n_steps = int(
-            np.ceil((data_loader.test_samples-1) / float(FLAGS.batch_size)))
+            np.ceil(data_loader.test_samples / float(FLAGS.batch_size)))
         progbar = Progbar(target=n_steps)
 
         num_processed_frames = 0
@@ -138,6 +137,11 @@ def _test_masks():
             for batch_num in range(FLAGS.batch_size):
                 inimg_fname = data['fname_batch'][batch_num].decode("utf-8")
                 foels_maskfname = get_foels_maskfname(inimg_fname)
+                # Foels cannot compute optical flow for the last frame,
+                # so if the foels_maskname doesn't exist, skip the frame.
+                if not os.path.exists(foels_maskfname):
+                    print(f"[INFO] Skip the {foels_maskfname}")
+                    continue
                 generated_mask = get_mask(
                     foels_maskfname, FLAGS.img_width, FLAGS.img_height)
                 gt_mask = data['gt_masks'][batch_num]

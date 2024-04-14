@@ -11,7 +11,7 @@ DATASET_FILE="${DOWNLOAD_DIR}/DAVIS"
 RESULT_DIR="${SCRIPT_DIR}/../results/Foels/DAVIS2016"
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: debug with detailed image but without stopping, 4: slow (1min/frame) debug image
-LOG_LEVEL=4
+LOG_LEVEL=2
 
 
 echo "[INFO] start downloading data..."

@@ -253,6 +253,7 @@ class Davis2016Reader(object):
         N = 0
         last_fname_numbers = [] # Will be used to calculate flow backward
         first_fname_numbers = [] # Will be used to calculate flow forward for the first frames
+        # each image sequence loop
         for fnames in file_list:
             if t_len < 0:
                 last_fname_numbers.append(np.arange(N + abs(t_len), N + len(fnames),
