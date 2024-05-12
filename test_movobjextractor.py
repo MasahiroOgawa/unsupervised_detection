@@ -87,7 +87,7 @@ def get_foels_maskfname(img_fname):
     foels_basefname = base_imgfname.replace('.jpg', '_mask.png')
     cur_script_dir = os.path.dirname(os.path.realpath(__file__))
     foels_maskfname = os.path.join(
-        cur_script_dir, "../../../output", category, "moving_object", foels_basefname)
+        cur_script_dir, "../../../output/davis", category, "moving_object", foels_basefname)
     print(f"[INFO] foels_maskfname: {foels_maskfname}")
     return foels_maskfname
 
@@ -174,7 +174,7 @@ def _test_masks():
                         in_img_fromfname = cv2.resize(
                             in_img_fromfname, (des_width, des_height))
                         cv2.imshow('in_img_fromfname', in_img_fromfname)
-                        foels_maskimg = cv2.imread(foels_maskfname) #color
+                        foels_maskimg = cv2.imread(foels_maskfname)  # color
                         foels_maskimg = cv2.resize(
                             foels_maskimg, (des_width, des_height))
                         comb_img = cv2.addWeighted(
@@ -183,7 +183,8 @@ def _test_masks():
 
                         rsz_preprocessed_bgr = cv2.resize(
                             preprocessed_bgr, (des_width, des_height))
-                        cv2.imshow('rsz_preprocessed_bgr', rsz_preprocessed_bgr)
+                        cv2.imshow('rsz_preprocessed_bgr',
+                                   rsz_preprocessed_bgr)
                         overlap_input = cv2.addWeighted(
                             in_img_fromfname, 0.3, rsz_preprocessed_bgr, 0.5, 0)
                         cv2.imshow('overlap_input', overlap_input)
