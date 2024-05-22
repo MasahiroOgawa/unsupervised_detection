@@ -11,7 +11,7 @@ CKPT_FILE="${DOWNLOAD_DIR}/unsupervised_detection_models/davis_best_model/model.
 PWC_CKPT_FILE="${DOWNLOAD_DIR}/pwcnet-lg-6-2-multisteps-chairsthingsmix/pwcnet.ckpt-595000.data-00000-of-00001"
 DATASET_FILE="${DOWNLOAD_DIR}/DAVIS"
 RESULT_DIR="${SCRIPT_DIR}/../results/DAVIS"
-
+LOG_LEVEL=2
 
 echo "[INFO] start downloading data..."
 mkdir -p ${DOWNLOAD_DIR}
@@ -43,9 +43,10 @@ python3 test_generator.py \
 --dataset=DAVIS2016 \
 --ckpt_file=$CKPT_FILE \
 --flow_ckpt=$PWC_CKPT_FILE \
---test_crop=0.9 \
+--test_crop=1.0 \
 --test_temporal_shift=1 \
 --root_dir=$DATASET_FILE \
 --generate_visualization=True \
---test_save_dir=${RESULT_DIR}
+--test_save_dir=${RESULT_DIR} \
+--log_level=${LOG_LEVEL}
 echo "[INFO] finished the test."

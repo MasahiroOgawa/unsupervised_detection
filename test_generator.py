@@ -106,25 +106,26 @@ def _test_masks():
                         inference['input_image'][batch_num])
                     preprocessed_mask = postprocess_mask(out_mask)
 
-                    # debug
-                    in_img_fromfname = cv2.imread(inference['img_fname'][batch_num].decode("utf-8"))
-                    in_img_fromfname = cv2.resize(
-                            in_img_fromfname, (des_width, des_height))
-                    rsz_preprocessed_bgr = cv2.resize(
-                            preprocessed_bgr, (des_width, des_height))
-
-                    # save flow image. predicted flow is named gt_flow.
-                    estim_flow_batch = inference['gt_flow']
-                    estim_flow = flow_to_image(estim_flow_batch)[batch_num]
-                    estim_flow = cv2.resize(
-                        estim_flow, (des_width, des_height))
-                    cv2.imwrite(os.path.join(save_dir, 'flow_{:08d}.png'.format(
-                        len(CategoryIou[category]))), estim_flow)
-                    overlap_input = cv2.addWeighted(
+                    if FLAGS.log_level > 3:
+                        in_img_fromfname = cv2.imread(inference['img_fname'][batch_num].decode("utf-8"))
+                        in_img_fromfname = cv2.resize(
+                                in_img_fromfname, (des_width, des_height))
+                        rsz_preprocessed_bgr = cv2.resize(
+                                preprocessed_bgr, (des_width, des_height))
+                        overlap_input = cv2.addWeighted(
                             in_img_fromfname, 0.3, rsz_preprocessed_bgr, 0.5, 0)
-                    cv2.imshow('overlap_input', overlap_input)
-                    cv2.waitKey(0)
+                        cv2.imshow('overlap_input', overlap_input)
+                        cv2.waitKey(0)
 
+                    if FLAGS.log_level > 1:
+                        # save flow image. predicted flow is named gt_flow.
+                        estim_flow_batch = inference['gt_flow']
+                        estim_flow = flow_to_image(estim_flow_batch)[batch_num]
+                        estim_flow = cv2.resize(
+                            estim_flow, (des_width, des_height))
+                        cv2.imwrite(os.path.join(save_dir, 'flow_{:08d}.png'.format(
+                            len(CategoryIou[category]))), estim_flow)
+                
                     # Overlap images
                     results = cv2.addWeighted(preprocessed_bgr, 0.5,
                                               preprocessed_mask, 0.4, 0)
