@@ -3,18 +3,23 @@ import os
 import tensorflow as tf
 from data.aug_flips import random_flip_images
 
+
 class DirectoryIterator(object):
     """
     Class for managing data loading.of images and labels
     We assume that the folder structure is:
 
     """
+
     def __init__(self, directory, part='train'):
         self.directory = directory
 
-        name_division ={'train': 'ImageSets/480p/train.txt',
-                        'val' : 'ImageSets/480p/val.txt',
-                        'trainval': 'ImageSets/480p/trainval.txt'}
+        name_division = {'train': 'ImageSets/480p/train.txt',
+                         'val': 'ImageSets/480p/val.txt',
+                         'trainval': 'ImageSets/480p/trainval.txt',
+                         # Mas added. you can copy this file from data/
+                         'trainval_movobj': 'ImageSets/480p/trainval_movobj.txt',
+                         }
         part_file = os.path.join(directory, name_division.get(part))
         if not os.path.isfile(part_file):
             raise IOError("Partition file not found")
@@ -27,14 +32,12 @@ class DirectoryIterator(object):
         self.annotation_filenames = []
         self._parse_components(self.components)
 
-
         if self.samples == 0:
             raise IOError("Did not find any file in the dataset folder")
         self.num_experiments = len(self.image_filenames)
 
         print('Found {} images belonging to {} experiments.'.format(
-                self.samples, self.num_experiments))
-
+            self.samples, self.num_experiments))
 
     def _parse_components(self, components):
         """
@@ -48,7 +51,6 @@ class DirectoryIterator(object):
         for string in components:
             folder_name = string[0].split('/')[3]
 
-
             if folder_name != current_experiment:
                 current_experiment = folder_name
                 if current_filenames is not None:
@@ -57,8 +59,10 @@ class DirectoryIterator(object):
                 current_filenames = []
                 current_annotations = []
 
-            current_filenames.append(os.path.join(self.directory, string[0][1:]))
-            current_annotations.append(os.path.join(self.directory,string[1][1:]))
+            current_filenames.append(
+                os.path.join(self.directory, string[0][1:]))
+            current_annotations.append(
+                os.path.join(self.directory, string[1][1:]))
             self.samples += 1
         # Append the last
         self.image_filenames.append(current_filenames)
@@ -78,24 +82,24 @@ class Davis2016Reader(object):
     def get_filenames_list(self, partition):
         iterator = DirectoryIterator(self.root_dir, partition)
         filenames, annotation_filenames = iterator.image_filenames, \
-                                            iterator.annotation_filenames
-        #Training calls it before, so it will be overwritten
+            iterator.annotation_filenames
+        # Training calls it before, so it will be overwritten
         self.val_samples = iterator.samples
         return filenames, annotation_filenames
 
     def preprocess_image(self, img):
         orig_width = 640
         orig_height = 384
-        img = ( tf.cast(img, tf.float32) / tf.constant(255.0) ) - 0.5
+        img = (tf.cast(img, tf.float32) / tf.constant(255.0)) - 0.5
         img = tf.image.resize_images(img, [orig_height, orig_width])
         return img
 
     def preprocess_mask(self, mask):
         orig_width = 640
         orig_height = 384
-        mask = (tf.cast(mask,tf.float32) / tf.constant(255.0))
+        mask = (tf.cast(mask, tf.float32) / tf.constant(255.0))
         mask = tf.image.resize_images(mask, [orig_height, orig_width],
-                                     method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+                                      method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
         return mask
 
     def random_crop_image_pair(self, image_1, image_2, max_cropping_percent=0.9):
@@ -104,7 +108,8 @@ class Davis2016Reader(object):
         at minimum max_cropping_percent smaller than the original image.
         The resulting patch is then reshaped to original size
         '''
-        rand = tf.random_uniform(shape=[], minval=0, maxval=1, dtype=tf.float32)
+        rand = tf.random_uniform(
+            shape=[], minval=0, maxval=1, dtype=tf.float32)
         cropping_percent = max_cropping_percent + rand*(1-max_cropping_percent)
 
         image_width = image_1.get_shape().as_list()[1]
@@ -121,8 +126,8 @@ class Davis2016Reader(object):
         # Resize
         image_c = tf.image.resize_images(image_c,
                                          [image_height, image_width])
-        image_1 = image_c[:,:,:3]
-        image_2 = image_c[:,:,3:6]
+        image_1 = image_c[:, :, :3]
+        image_2 = image_c[:, :, 3:6]
 
         return image_1, image_2
 
@@ -195,22 +200,25 @@ class Davis2016Reader(object):
         # Accumulates subsequent filenames, and makes a dataset with
         # end-points.
         N = 0
-        last_fname_numbers = [] # Will be used to calculate flow backward
-        first_fname_numbers = [] # Will be used to calculate flow forward
+        last_fname_numbers = []  # Will be used to calculate flow backward
+        first_fname_numbers = []  # Will be used to calculate flow forward
         for fnames in file_list:
             last_fname_numbers.append(np.arange(N + t_len, N + len(fnames),
-                                dtype=np.int32))
+                                                dtype=np.int32))
             first_fname_numbers.append(np.arange(N, N + len(fnames) - t_len,
-                                dtype=np.int32))
+                                                 dtype=np.int32))
             N += len(fnames)
 
         self.filenames = np.concatenate(file_list)
         last_fname_numbers = np.concatenate(last_fname_numbers)
-        last_fname_numbers = np.vstack((last_fname_numbers, -1.0*np.ones_like(last_fname_numbers))).T
+        last_fname_numbers = np.vstack(
+            (last_fname_numbers, -1.0*np.ones_like(last_fname_numbers))).T
 
         first_fname_numbers = np.concatenate(first_fname_numbers)
-        first_fname_numbers = np.vstack((first_fname_numbers, 1.0*np.ones_like(first_fname_numbers))).T
-        all_fname_numbers = np.vstack((first_fname_numbers, last_fname_numbers))
+        first_fname_numbers = np.vstack(
+            (first_fname_numbers, 1.0*np.ones_like(first_fname_numbers))).T
+        all_fname_numbers = np.vstack(
+            (first_fname_numbers, last_fname_numbers))
         all_fname_numbers = np.asarray(all_fname_numbers, dtype=np.float32)
         np.random.shuffle(all_fname_numbers)
 
@@ -227,7 +235,6 @@ class Davis2016Reader(object):
         img1s, img2s = iterator.get_next()
 
         return (img1s, img2s, tf.constant(1.0)), iterator
-
 
     def test_inputs(self, batch_size=32, partition='val', t_len=2, with_fname=False,
                     test_crop=1.0):
@@ -251,31 +258,34 @@ class Davis2016Reader(object):
         # Accumulates subsequent filenames, and makes a dataset with
         # end-points.
         N = 0
-        last_fname_numbers = [] # Will be used to calculate flow backward
-        first_fname_numbers = [] # Will be used to calculate flow forward for the first frames
+        last_fname_numbers = []  # Will be used to calculate flow backward
+        first_fname_numbers = []  # Will be used to calculate flow forward for the first frames
         # each image sequence loop
         for fnames in file_list:
             if t_len < 0:
                 last_fname_numbers.append(np.arange(N + abs(t_len), N + len(fnames),
-                                    dtype=np.int32))
+                                                    dtype=np.int32))
                 first_fname_numbers.append(np.arange(N, N + abs(t_len),
-                                    dtype=np.int32))
+                                                     dtype=np.int32))
             elif t_len > 0:
                 first_fname_numbers.append(np.arange(N, N + len(fnames) - t_len,
-                                    dtype=np.int32))
+                                                     dtype=np.int32))
                 last_fname_numbers.append(np.arange(N + len(fnames) - t_len, N + len(fnames),
-                                    dtype=np.int32))
+                                                    dtype=np.int32))
             N += len(fnames)
 
         self.test_t_len = abs(t_len)
         self.filenames = np.concatenate(file_list)
         self.annotation_filenames = np.concatenate(annotation_fnames_list)
         last_fname_numbers = np.concatenate(last_fname_numbers)
-        last_fname_numbers = np.vstack((last_fname_numbers, -1.0*np.ones_like(last_fname_numbers))).T
+        last_fname_numbers = np.vstack(
+            (last_fname_numbers, -1.0*np.ones_like(last_fname_numbers))).T
 
         first_fname_numbers = np.concatenate(first_fname_numbers)
-        first_fname_numbers = np.vstack((first_fname_numbers, 1.0*np.ones_like(first_fname_numbers))).T
-        all_fname_numbers = np.vstack((first_fname_numbers, last_fname_numbers))
+        first_fname_numbers = np.vstack(
+            (first_fname_numbers, 1.0*np.ones_like(first_fname_numbers))).T
+        all_fname_numbers = np.vstack(
+            (first_fname_numbers, last_fname_numbers))
         all_fname_numbers = np.asarray(all_fname_numbers, dtype=np.float32)
 
         # Form training batches
@@ -290,7 +300,6 @@ class Davis2016Reader(object):
         if with_fname:
             return (img1s, img2s, seg1s, fnames), iterator
         return (img1s, img2s, seg1s), iterator
-
 
     def test_dataset_map(self, input_queue):
         '''

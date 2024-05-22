@@ -56,11 +56,12 @@ gflags.DEFINE_integer("log_level", 0, "0: no log but save the result images, 1: 
 gflags.DEFINE_bool('generate_visualization', False,
                    "Whether to save images while computing metrics")
 gflags.DEFINE_float(
-    "test_crop", 0.9, "central cropping percentages of input images at test time")
+    "test_crop", 1.0, "central cropping percentages of input images at test time")
 gflags.DEFINE_integer('test_temporal_shift', 1,
                       'Constant Temporal shift between the two images used to calculate flow images.')
 gflags.DEFINE_string(
     "ckpt_file", "", "Model Checkpoint to be used for testing.")
-gflags.DEFINE_string("test_partition", "val", "Can be train/val/trainval")
+gflags.DEFINE_string("test_partition", "trainval_movobj",
+                     "Can be train/val/trainval/trainval_movobj")
 gflags.DEFINE_string('test_save_dir', "",
                      "Test Folder for the experiment. It can store generated predictions and logs")
