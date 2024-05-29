@@ -78,7 +78,7 @@ class DataLoader:
         return sess.run(fetches)
 
 
-def get_foels_maskfname(img_fname):
+def get_foels_maskfname(img_fname, foels_resdir):
     # get file name of the image
     print(f"[INFO] process image: {img_fname}")
     base_imgfname = os.path.basename(img_fname)
@@ -87,7 +87,7 @@ def get_foels_maskfname(img_fname):
     foels_basefname = base_imgfname.replace('.jpg', '_mask.png')
     cur_script_dir = os.path.dirname(os.path.realpath(__file__))
     foels_maskfname = os.path.join(
-        cur_script_dir, "../../../output/davis", category, "moving_object", foels_basefname)
+        cur_script_dir, foels_resdir, category, "moving_object", foels_basefname)
     print(f"[INFO] foels_maskfname: {foels_maskfname}")
     return foels_maskfname
 
@@ -136,7 +136,7 @@ def _test_masks():
             # Now write images in the test folder
             for batch_num in range(FLAGS.batch_size):
                 inimg_fname = data['fname_batch'][batch_num].decode("utf-8")
-                foels_maskfname = get_foels_maskfname(inimg_fname)
+                foels_maskfname = get_foels_maskfname(inimg_fname, FLAGS.foels_resdir)
                 # Foels cannot compute optical flow for the last frame,
                 # so if the foels_maskname doesn't exist, skip the frame.
                 if not os.path.exists(foels_maskfname):

@@ -65,3 +65,4 @@ gflags.DEFINE_string("test_partition", "trainval_movobj",
                      "Can be train/val/trainval/trainval_movobj")
 gflags.DEFINE_string('test_save_dir', "",
                      "Test Folder for the experiment. It can store generated predictions and logs")
+gflags.DEFINE_string("foels_resdir", "../../../output/davis", "Foels result folder as an input of unsupervised detection evaluation.")
