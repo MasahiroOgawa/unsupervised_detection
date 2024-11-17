@@ -24,7 +24,10 @@ def cost_volume(c1, warp, search_range, name):
         warp: Warped level of the feature pyramid of image22
         search_range: Search range (maximum displacement)
     """
-    padded_lvl = tf.pad(warp, [[0, 0], [search_range, search_range], [search_range, search_range], [0, 0]])
+    padded_lvl = tf.pad(
+        warp,
+        [[0, 0], [search_range, search_range], [search_range, search_range], [0, 0]],
+    )
     _, h, w, _ = tf.unstack(tf.shape(c1))
     max_offset = search_range * 2 + 1
 

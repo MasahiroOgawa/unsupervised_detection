@@ -7,7 +7,11 @@ import scipy.io as sio
 import tensorflow as tf
 from keras.utils.generic_utils import Progbar
 from models.adversarial_learner import AdversarialLearner
-from models.utils.general_utils import postprocess_mask, postprocess_image, compute_boundary_score
+from models.utils.general_utils import (
+    postprocess_mask,
+    postprocess_image,
+    compute_boundary_score,
+)
 from common_flags import FLAGS
 from test_generator import compute_IoU, compute_mae
 from data.davis2016_data_utils import Davis2016Reader
@@ -26,41 +30,54 @@ class DataLoader:
 
     def read_data(self):
         with tf.name_scope("data_loading"):
-            if self.config.dataset == 'DAVIS2016':
+            if self.config.dataset == "DAVIS2016":
                 reader = Davis2016Reader(self.config.root_dir, num_threads=1)
-                test_batch, test_iter = reader.test_inputs(batch_size=self.config.batch_size,
-                                                           t_len=self.config.test_temporal_shift,
-                                                           with_fname=True,
-                                                           test_crop=self.config.test_crop,
-                                                           partition=self.config.test_partition)
+                test_batch, test_iter = reader.test_inputs(
+                    batch_size=self.config.batch_size,
+                    t_len=self.config.test_temporal_shift,
+                    with_fname=True,
+                    test_crop=self.config.test_crop,
+                    partition=self.config.test_partition,
+                )
 
-            elif self.config.dataset == 'FBMS':
+            elif self.config.dataset == "FBMS":
                 reader = FBMS59Reader(self.config.root_dir)
-                test_batch, test_iter = reader.test_inputs(batch_size=self.config.batch_size,
-                                                           test_crop=self.config.test_crop,
-                                                           t_len=self.config.test_temporal_shift,
-                                                           with_fname=True,
-                                                           partition=self.config.test_partition)
-            elif self.config.dataset == 'SEGTRACK':
+                test_batch, test_iter = reader.test_inputs(
+                    batch_size=self.config.batch_size,
+                    test_crop=self.config.test_crop,
+                    t_len=self.config.test_temporal_shift,
+                    with_fname=True,
+                    partition=self.config.test_partition,
+                )
+            elif self.config.dataset == "SEGTRACK":
                 reader = SegTrackV2Reader(self.config.root_dir, num_threads=1)
-                test_batch, test_iter = reader.test_inputs(batch_size=self.config.batch_size,
-                                                           test_crop=self.config.test_crop,
-                                                           t_len=self.config.test_temporal_shift,
-                                                           with_fname=True)
+                test_batch, test_iter = reader.test_inputs(
+                    batch_size=self.config.batch_size,
+                    test_crop=self.config.test_crop,
+                    t_len=self.config.test_temporal_shift,
+                    with_fname=True,
+                )
             else:
                 raise IOError("Dataset should be DAVIS2016 / FBMS / SEGTRACK")
 
             print(f"[INFO] batch_size in DataLoader: {self.config.batch_size}")
             print(f"[INFO] test_batch : {test_batch}")
 
-            image_batch, gt_mask_batch, fname_batch = test_batch[0], test_batch[2], test_batch[3]
+            image_batch, gt_mask_batch, fname_batch = (
+                test_batch[0],
+                test_batch[2],
+                test_batch[3],
+            )
 
         # reshape
-        image_batch = tf.image.resize_images(image_batch, [self.config.img_height,
-                                                           self.config.img_width])
-        gt_mask_batch = tf.image.resize_images(gt_mask_batch, [self.config.img_height,
-                                                               self.config.img_width],
-                                               method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        image_batch = tf.image.resize_images(
+            image_batch, [self.config.img_height, self.config.img_width]
+        )
+        gt_mask_batch = tf.image.resize_images(
+            gt_mask_batch,
+            [self.config.img_height, self.config.img_width],
+            method=tf.image.ResizeMethod.NEAREST_NEIGHBOR,
+        )
 
         # set variables.
         self.image_batch = image_batch
@@ -73,8 +90,11 @@ class DataLoader:
 
     def get_data(self, sess):
         # transform tensor to numpy array
-        fetches = {'image_batch': self.image_batch,
-                   'gt_masks': self.gt_masks, 'fname_batch': self.fname_batch}
+        fetches = {
+            "image_batch": self.image_batch,
+            "gt_masks": self.gt_masks,
+            "fname_batch": self.fname_batch,
+        }
         return sess.run(fetches)
 
 
@@ -83,11 +103,12 @@ def get_foels_maskfname(img_fname, foels_resdir):
     print(f"[INFO] process image: {img_fname}")
     base_imgfname = os.path.basename(img_fname)
     print(f"[INFO] base_imgfname: {base_imgfname}")
-    category = img_fname.split('/')[-2]
-    foels_basefname = base_imgfname.replace('.jpg', '_mask.png')
+    category = img_fname.split("/")[-2]
+    foels_basefname = base_imgfname.replace(".jpg", "_mask.png")
     cur_script_dir = os.path.dirname(os.path.realpath(__file__))
     foels_maskfname = os.path.join(
-        cur_script_dir, foels_resdir, category, "moving_object", foels_basefname)
+        cur_script_dir, foels_resdir, category, "moving_object", foels_basefname
+    )
     print(f"[INFO] foels_maskfname: {foels_maskfname}")
     return foels_maskfname
 
@@ -113,15 +134,14 @@ def _test_masks():
     print(f"[INFO] batch_size: {FLAGS.batch_size}")
 
     # we need session to transform data loader's output tensor to numpy array.
-    sv = tf.train.Supervisor(logdir=FLAGS.test_save_dir,
-                             save_summaries_secs=0,
-                             saver=None)
+    sv = tf.train.Supervisor(
+        logdir=FLAGS.test_save_dir, save_summaries_secs=0, saver=None
+    )
     with sv.managed_session() as sess:
         sess.run(data_loader.test_iter.initializer)
         # currently Foels need t, t+1 frames to compute optical flow,
         # so we need to skip the last frame of each sequence.
-        n_steps = int(
-            np.ceil(data_loader.test_samples / float(FLAGS.batch_size)))
+        n_steps = int(np.ceil(data_loader.test_samples / float(FLAGS.batch_size)))
         progbar = Progbar(target=n_steps)
 
         num_processed_frames = 0
@@ -135,7 +155,7 @@ def _test_masks():
 
             # Now write images in the test folder
             for batch_num in range(FLAGS.batch_size):
-                inimg_fname = data['fname_batch'][batch_num].decode("utf-8")
+                inimg_fname = data["fname_batch"][batch_num].decode("utf-8")
                 foels_maskfname = get_foels_maskfname(inimg_fname, FLAGS.foels_resdir)
                 # Foels cannot compute optical flow for the last frame,
                 # so if the foels_maskname doesn't exist, skip the frame.
@@ -143,12 +163,12 @@ def _test_masks():
                     print(f"[INFO] Skip the {foels_maskfname}")
                     continue
                 generated_mask = get_mask(
-                    foels_maskfname, FLAGS.img_width, FLAGS.img_height)
-                gt_mask = data['gt_masks'][batch_num]
-                category = inimg_fname.split('/')[-2]
+                    foels_maskfname, FLAGS.img_width, FLAGS.img_height
+                )
+                gt_mask = data["gt_masks"][batch_num]
+                category = inimg_fname.split("/")[-2]
 
-                iou, out_mask = compute_IoU(
-                    gt_mask=gt_mask, pred_mask_f=generated_mask)
+                iou, out_mask = compute_IoU(gt_mask=gt_mask, pred_mask_f=generated_mask)
                 mae = compute_mae(gt_mask=gt_mask, pred_mask_f=out_mask)
                 try:
                     CategoryIou[category].append(iou)
@@ -162,55 +182,67 @@ def _test_masks():
                     save_dir = os.path.join(FLAGS.test_save_dir, category)
                     if not os.path.isdir(save_dir):
                         os.mkdir(save_dir)
-                    save_fname = os.path.join(save_dir,
-                                              "frame_{:08d}.png".format(len(CategoryIou[category])))
+                    save_fname = os.path.join(
+                        save_dir, "frame_{:08d}.png".format(len(CategoryIou[category]))
+                    )
 
-                    preprocessed_bgr = postprocess_image(
-                        data['image_batch'][batch_num])
+                    preprocessed_bgr = postprocess_image(data["image_batch"][batch_num])
                     preprocessed_mask = postprocess_mask(out_mask)
 
                     if FLAGS.log_level > 2:
                         in_img_fromfname = cv2.imread(inimg_fname)
                         in_img_fromfname = cv2.resize(
-                            in_img_fromfname, (des_width, des_height))
-                        cv2.imshow('in_img_fromfname', in_img_fromfname)
+                            in_img_fromfname, (des_width, des_height)
+                        )
+                        cv2.imshow("in_img_fromfname", in_img_fromfname)
                         foels_maskimg = cv2.imread(foels_maskfname)  # color
                         foels_maskimg = cv2.resize(
-                            foels_maskimg, (des_width, des_height))
+                            foels_maskimg, (des_width, des_height)
+                        )
                         comb_img = cv2.addWeighted(
-                            in_img_fromfname, 0.5, foels_maskimg, 0.5, 0)
-                        cv2.imshow('overlap', comb_img)
+                            in_img_fromfname, 0.5, foels_maskimg, 0.5, 0
+                        )
+                        cv2.imshow("overlap", comb_img)
 
                         rsz_preprocessed_bgr = cv2.resize(
-                            preprocessed_bgr, (des_width, des_height))
-                        cv2.imshow('rsz_preprocessed_bgr',
-                                   rsz_preprocessed_bgr)
+                            preprocessed_bgr, (des_width, des_height)
+                        )
+                        cv2.imshow("rsz_preprocessed_bgr", rsz_preprocessed_bgr)
                         overlap_input = cv2.addWeighted(
-                            in_img_fromfname, 0.3, rsz_preprocessed_bgr, 0.5, 0)
-                        cv2.imshow('overlap_input', overlap_input)
+                            in_img_fromfname, 0.3, rsz_preprocessed_bgr, 0.5, 0
+                        )
+                        cv2.imshow("overlap_input", overlap_input)
                         rsz_preprocessed_mask = cv2.resize(
-                            preprocessed_mask, (des_width, des_height))
+                            preprocessed_mask, (des_width, des_height)
+                        )
                         overlap_mask = cv2.addWeighted(
-                            foels_maskimg, 0.3, rsz_preprocessed_mask, 0.5, 0)
-                        cv2.imshow('overlap_mask', overlap_mask)
+                            foels_maskimg, 0.3, rsz_preprocessed_mask, 0.5, 0
+                        )
+                        cv2.imshow("overlap_mask", overlap_mask)
 
                     # Overlap images
-                    results = cv2.addWeighted(preprocessed_bgr, 0.5,
-                                              preprocessed_mask, 0.4, 0)
+                    results = cv2.addWeighted(
+                        preprocessed_bgr, 0.5, preprocessed_mask, 0.4, 0
+                    )
                     results = cv2.resize(results, (des_width, des_height))
 
                     cv2.imwrite(save_fname, results)
                     if FLAGS.log_level > 2:
-                        cv2.imshow('result', results)
+                        cv2.imshow("result", results)
                         if FLAGS.log_level > 3:
                             cv2.waitKey(0)
 
-                    matlab_fname = os.path.join(save_dir,
-                                                'result_{}.mat'.format(len(CategoryIou[category])))
-                    sio.savemat(matlab_fname,
-                                {'img': cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
-                                 'pred_mask': out_mask,
-                                 'gt_mask': gt_mask})
+                    matlab_fname = os.path.join(
+                        save_dir, "result_{}.mat".format(len(CategoryIou[category]))
+                    )
+                    sio.savemat(
+                        matlab_fname,
+                        {
+                            "img": cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
+                            "pred_mask": out_mask,
+                            "gt_mask": gt_mask,
+                        },
+                    )
                 num_processed_frames += 1
 
             progbar.update(step)
@@ -219,19 +251,29 @@ def _test_masks():
         tot_ious = 0
         tot_maes = 0
         per_cat_iou = []
-        with open(os.path.join(FLAGS.test_save_dir, 'result.txt'), 'w') as f:
+        with open(os.path.join(FLAGS.test_save_dir, "result.txt"), "w") as f:
             for cat, list_iou in CategoryIou.items():
-                print("Category {}: IoU is {} and MAE is {}".format(
-                    cat, np.mean(list_iou), np.mean(CategoryMae[cat])), file=f)
+                print(
+                    "Category {}: IoU is {} and MAE is {}".format(
+                        cat, np.mean(list_iou), np.mean(CategoryMae[cat])
+                    ),
+                    file=f,
+                )
                 tot_ious += np.sum(list_iou)
                 tot_maes += np.sum(CategoryMae[cat])
                 per_cat_iou.append(np.mean(list_iou))
-            print("The Average over the dataset: IoU is {} and MAE is {}".format(
-                tot_ious/float(num_processed_frames), tot_maes/float(num_processed_frames)), file=f)
-            print("The Average over sequences IoU is {}".format(
-                np.mean(per_cat_iou)), file=f)
-            print("Success: Processed {} frames".format(
-                num_processed_frames), file=f)
+            print(
+                "The Average over the dataset: IoU is {} and MAE is {}".format(
+                    tot_ious / float(num_processed_frames),
+                    tot_maes / float(num_processed_frames),
+                ),
+                file=f,
+            )
+            print(
+                "The Average over sequences IoU is {}".format(np.mean(per_cat_iou)),
+                file=f,
+            )
+            print("Success: Processed {} frames".format(num_processed_frames), file=f)
 
 
 def main(argv):
@@ -239,7 +281,7 @@ def main(argv):
     try:
         argv = FLAGS(argv)  # parse flags
     except gflags.FlagsError:
-        print('Usage: %s ARGS\\n%s' % (sys.argv[0], FLAGS))
+        print("Usage: %s ARGS\\n%s" % (sys.argv[0], FLAGS))
         sys.exit(1)
     _test_masks()
 

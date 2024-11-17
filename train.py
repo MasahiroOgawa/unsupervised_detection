@@ -13,6 +13,7 @@ from common_flags import FLAGS
 # THIS FILE SHOULD REMAIN UNCHANGED #
 #####################################
 
+
 def _main():
     # Set random seed for training
     seed = 8964
@@ -33,14 +34,16 @@ def _main():
     trl = AdversarialLearner()
     trl.train(FLAGS)
 
+
 def main(argv):
     # Utility main to load flags
     try:
-      argv = FLAGS(argv)  # parse flags
+        argv = FLAGS(argv)  # parse flags
     except gflags.FlagsError:
-      print ('Usage: %s ARGS\\n%s' % (sys.argv[0], FLAGS))
-      sys.exit(1)
+        print("Usage: %s ARGS\\n%s" % (sys.argv[0], FLAGS))
+        sys.exit(1)
     _main()
+
 
 if __name__ == "__main__":
     main(sys.argv)

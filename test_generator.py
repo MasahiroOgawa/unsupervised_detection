@@ -7,7 +7,11 @@ import scipy.io as sio
 import tensorflow as tf
 from keras.utils.generic_utils import Progbar
 from models.adversarial_learner import AdversarialLearner
-from models.utils.general_utils import postprocess_mask, postprocess_image, compute_boundary_score
+from models.utils.general_utils import (
+    postprocess_mask,
+    postprocess_image,
+    compute_boundary_score,
+)
 from models.utils.flow_utils import flow_to_image
 
 from common_flags import FLAGS
@@ -32,8 +36,9 @@ def compute_IoU(gt_mask, pred_mask_f, threshold=0.1):
     if np.isclose(np.sum(annotation), 0) and np.isclose(np.sum(gt_mask), 0):
         return 1, annotation
     else:
-        return np.sum((annotation & gt_mask)) / \
-            np.sum((annotation | gt_mask), dtype=np.float32), annotation
+        return np.sum((annotation & gt_mask)) / np.sum(
+            (annotation | gt_mask), dtype=np.float32
+        ), annotation
 
 
 def compute_mae(gt_mask, pred_mask_f):
@@ -48,9 +53,9 @@ def _test_masks():
     CategoryIou = {}
     CategoryMae = {}
     # manages multi-threading
-    sv = tf.train.Supervisor(logdir=FLAGS.test_save_dir,
-                             save_summaries_secs=0,
-                             saver=None)
+    sv = tf.train.Supervisor(
+        logdir=FLAGS.test_save_dir, save_summaries_secs=0, saver=None
+    )
     with sv.managed_session() as sess:
         checkpoint = FLAGS.ckpt_file
         if checkpoint:
@@ -76,16 +81,15 @@ def _test_masks():
                 print("End of testing dataset")  # ==> "End of dataset"
                 break
             # Now write images in the test folder
-            for batch_num in range(inference['input_image'].shape[0]):
-
+            for batch_num in range(inference["input_image"].shape[0]):
                 # select mask
-                generated_mask = inference['gen_masks'][batch_num]
-                gt_mask = inference['gt_masks'][batch_num]
-                category = inference['img_fname'][batch_num].decode(
-                    "utf-8").split('/')[-2]
+                generated_mask = inference["gen_masks"][batch_num]
+                gt_mask = inference["gt_masks"][batch_num]
+                category = (
+                    inference["img_fname"][batch_num].decode("utf-8").split("/")[-2]
+                )
 
-                iou, out_mask = compute_IoU(
-                    gt_mask=gt_mask, pred_mask_f=generated_mask)
+                iou, out_mask = compute_IoU(gt_mask=gt_mask, pred_mask_f=generated_mask)
                 mae = compute_mae(gt_mask=gt_mask, pred_mask_f=out_mask)
                 try:
                     CategoryIou[category].append(iou)
@@ -99,46 +103,63 @@ def _test_masks():
                     save_dir = os.path.join(FLAGS.test_save_dir, category)
                     if not os.path.isdir(save_dir):
                         os.mkdir(save_dir)
-                    filename = os.path.join(save_dir,
-                                            "frame_{:08d}.png".format(len(CategoryIou[category])))
+                    filename = os.path.join(
+                        save_dir, "frame_{:08d}.png".format(len(CategoryIou[category]))
+                    )
 
                     preprocessed_bgr = postprocess_image(
-                        inference['input_image'][batch_num])
+                        inference["input_image"][batch_num]
+                    )
                     preprocessed_mask = postprocess_mask(out_mask)
 
                     if FLAGS.log_level > 3:
-                        in_img_fromfname = cv2.imread(inference['img_fname'][batch_num].decode("utf-8"))
+                        in_img_fromfname = cv2.imread(
+                            inference["img_fname"][batch_num].decode("utf-8")
+                        )
                         in_img_fromfname = cv2.resize(
-                                in_img_fromfname, (des_width, des_height))
+                            in_img_fromfname, (des_width, des_height)
+                        )
                         rsz_preprocessed_bgr = cv2.resize(
-                                preprocessed_bgr, (des_width, des_height))
+                            preprocessed_bgr, (des_width, des_height)
+                        )
                         overlap_input = cv2.addWeighted(
-                            in_img_fromfname, 0.3, rsz_preprocessed_bgr, 0.5, 0)
-                        cv2.imshow('overlap_input', overlap_input)
+                            in_img_fromfname, 0.3, rsz_preprocessed_bgr, 0.5, 0
+                        )
+                        cv2.imshow("overlap_input", overlap_input)
                         cv2.waitKey(0)
 
                     if FLAGS.log_level > 1:
                         # save flow image. predicted flow is named gt_flow.
-                        estim_flow_batch = inference['gt_flow']
+                        estim_flow_batch = inference["gt_flow"]
                         estim_flow = flow_to_image(estim_flow_batch)[batch_num]
-                        estim_flow = cv2.resize(
-                            estim_flow, (des_width, des_height))
-                        cv2.imwrite(os.path.join(save_dir, 'flow_{:08d}.png'.format(
-                            len(CategoryIou[category]))), estim_flow)
-                
+                        estim_flow = cv2.resize(estim_flow, (des_width, des_height))
+                        cv2.imwrite(
+                            os.path.join(
+                                save_dir,
+                                "flow_{:08d}.png".format(len(CategoryIou[category])),
+                            ),
+                            estim_flow,
+                        )
+
                     # Overlap images
-                    results = cv2.addWeighted(preprocessed_bgr, 0.5,
-                                              preprocessed_mask, 0.4, 0)
+                    results = cv2.addWeighted(
+                        preprocessed_bgr, 0.5, preprocessed_mask, 0.4, 0
+                    )
                     results = cv2.resize(results, (des_width, des_height))
 
                     cv2.imwrite(filename, results)
-                    matlab_fname = os.path.join(save_dir,
-                                                'result_{}.mat'.format(len(CategoryIou[category])))
-                    sio.savemat(matlab_fname,
-                                {'flow': inference['gt_flow'][batch_num],
-                                 'img1': cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
-                                 'pred_mask': out_mask,
-                                 'gt_mask': inference['gt_masks'][batch_num]})
+                    matlab_fname = os.path.join(
+                        save_dir, "result_{}.mat".format(len(CategoryIou[category]))
+                    )
+                    sio.savemat(
+                        matlab_fname,
+                        {
+                            "flow": inference["gt_flow"][batch_num],
+                            "img1": cv2.cvtColor(preprocessed_bgr, cv2.COLOR_BGR2RGB),
+                            "pred_mask": out_mask,
+                            "gt_mask": inference["gt_masks"][batch_num],
+                        },
+                    )
                 i += 1
 
             progbar.update(step)
@@ -147,17 +168,27 @@ def _test_masks():
         tot_ious = 0
         tot_maes = 0
         per_cat_iou = []
-        with open(os.path.join(FLAGS.test_save_dir, 'result.txt'), 'w') as f:
+        with open(os.path.join(FLAGS.test_save_dir, "result.txt"), "w") as f:
             for cat, list_iou in CategoryIou.items():
-                print("Category {}: IoU is {} and MAE is {}".format(
-                    cat, np.mean(list_iou), np.mean(CategoryMae[cat])), file=f)
+                print(
+                    "Category {}: IoU is {} and MAE is {}".format(
+                        cat, np.mean(list_iou), np.mean(CategoryMae[cat])
+                    ),
+                    file=f,
+                )
                 tot_ious += np.sum(list_iou)
                 tot_maes += np.sum(CategoryMae[cat])
                 per_cat_iou.append(np.mean(list_iou))
-            print("The Average over the dataset: IoU is {} and MAE is {}".format(
-                tot_ious/float(i), tot_maes/float(i)), file=f)
-            print("The Average over sequences IoU is {}".format(
-                np.mean(per_cat_iou)), file=f)
+            print(
+                "The Average over the dataset: IoU is {} and MAE is {}".format(
+                    tot_ious / float(i), tot_maes / float(i)
+                ),
+                file=f,
+            )
+            print(
+                "The Average over sequences IoU is {}".format(np.mean(per_cat_iou)),
+                file=f,
+            )
             print("Success: Processed {} frames".format(i), file=f)
 
 
@@ -166,7 +197,7 @@ def main(argv):
     try:
         argv = FLAGS(argv)  # parse flags
     except gflags.FlagsError:
-        print('Usage: %s ARGS\\n%s' % (sys.argv[0], FLAGS))
+        print("Usage: %s ARGS\\n%s" % (sys.argv[0], FLAGS))
         sys.exit(1)
     _test_masks()
 

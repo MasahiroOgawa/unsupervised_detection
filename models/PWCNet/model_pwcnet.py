@@ -6,21 +6,21 @@ from .core_costvol import cost_volume
 
 
 _DEFAULT_PWCNET_TEST_OPTIONS = {
-    'verbose': False,
-    'ckpt_path': '/home/tony/PhD/Project/Representation_RL/depth_from_interaction/depth_learner/models/PWCNet/checkpoint/pwcnet-sm-6-2-cyclic-chairsthingsmix/pwcnet.ckpt-49000',
+    "verbose": False,
+    "ckpt_path": "/home/tony/PhD/Project/Representation_RL/depth_from_interaction/depth_learner/models/PWCNet/checkpoint/pwcnet-sm-6-2-cyclic-chairsthingsmix/pwcnet.ckpt-49000",
     # Model hyper-params
-    'pyr_lvls': 6,  # number of feature levels in the flow pyramid
-    'flow_pred_lvl': 2,  # which level to upsample to generate the final optical flow prediction
-    'search_range': 4,  # cost volume search range
+    "pyr_lvls": 6,  # number of feature levels in the flow pyramid
+    "flow_pred_lvl": 2,  # which level to upsample to generate the final optical flow prediction
+    "search_range": 4,  # cost volume search range
     # if True, use model with dense connections (4705064 params w/o, 9374274 params with (no residual conn.))
-    'use_dense_cx': True,
+    "use_dense_cx": True,
     # if True, use model with residual connections (4705064 params w/o, 6774064 params with (+2069000) (no dense conn.))
-    'use_res_cx': True,
+    "use_res_cx": True,
 }
 
 
 class ModelPWCNet(object):
-    def __init__(self, name='pwcnet', options=_DEFAULT_PWCNET_TEST_OPTIONS):
+    def __init__(self, name="pwcnet", options=_DEFAULT_PWCNET_TEST_OPTIONS):
         """Initialize the ModelPWCNet object
         Args:
             name: Model name
@@ -70,7 +70,7 @@ class ModelPWCNet(object):
 
         # Make input samples conform to the network's requirements
         # x: [batch_size,2,H,W,3] uint8; x_adapt: [batch_size,2,H,W,3] float32
-        x_adapt  = self.adapt_x(img1s, img2s)
+        x_adapt = self.adapt_x(img1s, img2s)
         flow_pred_tnsr, _ = self.nn(x_adapt)
 
         return flow_pred_tnsr
@@ -78,7 +78,7 @@ class ModelPWCNet(object):
     ###
     # PWC-Net pyramid helpers
     ###
-    def extract_features(self, x_tnsr, name='featpyr'):
+    def extract_features(self, x_tnsr, name="featpyr"):
         """Extract pyramid of features
         Args:
             x_tnsr: Input tensor (input pair of images in [batch_size, 2, H, W, 3] format)
@@ -146,31 +146,62 @@ class ModelPWCNet(object):
         Ref Caffee code:
             https://github.com/NVlabs/PWC-Net/blob/438ca897ae77e08f419ddce5f0d7fa63b0a27a77/Caffe/model/train.prototxt#L314-L1141
         """
-        assert(1 <= self.opts['pyr_lvls'] <= 6)
+        assert 1 <= self.opts["pyr_lvls"] <= 6
         # Make the feature pyramids 1-based for better readability down the line
         num_chann = [None, 16, 32, 64, 96, 128, 196]
         c1, c2 = [None], [None]
         init = tf.keras.initializers.he_normal()
         with tf.variable_scope(name):
-            for pyr, x, reuse, name in zip([c1, c2], [x_tnsr[:, 0], x_tnsr[:, 1]], [None, True], ['c1', 'c2']):
-                for lvl in range(1, self.opts['pyr_lvls'] + 1):
+            for pyr, x, reuse, name in zip(
+                [c1, c2], [x_tnsr[:, 0], x_tnsr[:, 1]], [None, True], ["c1", "c2"]
+            ):
+                for lvl in range(1, self.opts["pyr_lvls"] + 1):
                     # tf.layers.conv2d(inputs, filters, kernel_size, strides=(1, 1), padding='valid', ... , name, reuse)
                     # reuse is set to True because we want to learn a single set of weights for the pyramid
                     # kernel_initializer = 'he_normal' or tf.keras.initializers.he_normal(seed=None)
                     f = num_chann[lvl]
-                    x = tf.layers.conv2d(x, f, 3, 2, 'same', kernel_initializer=init, name='conv{}a'.format(lvl), reuse=reuse)
-                    x = tf.nn.leaky_relu(x, alpha=0.1)  # , name=f'relu{lvl+1}a') # default alpha is 0.2 for TF
-                    x = tf.layers.conv2d(x, f, 3, 1, 'same', kernel_initializer=init, name='conv{}aa'.format(lvl), reuse=reuse)
+                    x = tf.layers.conv2d(
+                        x,
+                        f,
+                        3,
+                        2,
+                        "same",
+                        kernel_initializer=init,
+                        name="conv{}a".format(lvl),
+                        reuse=reuse,
+                    )
+                    x = tf.nn.leaky_relu(
+                        x, alpha=0.1
+                    )  # , name=f'relu{lvl+1}a') # default alpha is 0.2 for TF
+                    x = tf.layers.conv2d(
+                        x,
+                        f,
+                        3,
+                        1,
+                        "same",
+                        kernel_initializer=init,
+                        name="conv{}aa".format(lvl),
+                        reuse=reuse,
+                    )
                     x = tf.nn.leaky_relu(x, alpha=0.1)  # , name=f'relu{lvl+1}aa')
-                    x = tf.layers.conv2d(x, f, 3, 1, 'same', kernel_initializer=init, name='conv{}b'.format(lvl), reuse=reuse)
-                    x = tf.nn.leaky_relu(x, alpha=0.1, name='{}{}'.format(name, lvl))
+                    x = tf.layers.conv2d(
+                        x,
+                        f,
+                        3,
+                        1,
+                        "same",
+                        kernel_initializer=init,
+                        name="conv{}b".format(lvl),
+                        reuse=reuse,
+                    )
+                    x = tf.nn.leaky_relu(x, alpha=0.1, name="{}{}".format(name, lvl))
                     pyr.append(x)
         return c1, c2
 
     ###
     # PWC-Net warping helpers
     ###
-    def warp(self, c2, sc_up_flow, lvl, name='warp'):
+    def warp(self, c2, sc_up_flow, lvl, name="warp"):
         """Warp a level of Image1's feature pyramid using the upsampled flow at level+1 of Image2's pyramid.
         Args:
             c2: The level of the feature pyramid of Image2 to warp
@@ -237,14 +268,14 @@ class ModelPWCNet(object):
             https://github.com/bryanyzhu/deepOF/blob/master/ucf101wrapFlow.py
             https://github.com/rajat95/Optical-Flow-Warping-Tensorflow/blob/master/warp.py
         """
-        op_name = '{}{}'.format(name, lvl)
+        op_name = "{}{}".format(name, lvl)
         if self.dbg:
-            msg = 'Adding {op_name} with inputs {c2.op.name} and {sc_up_flow.op.name}'.format()
+            msg = "Adding {op_name} with inputs {c2.op.name} and {sc_up_flow.op.name}".format()
             print(msg)
         with tf.name_scope(name):
             return dense_image_warp(c2, sc_up_flow, name=op_name)
 
-    def deconv(self, x, lvl, name='up_flow'):
+    def deconv(self, x, lvl, name="up_flow"):
         """Upsample, not using a bilinear filter, but rather learn the weights of a conv2d_transpose op filters.
         Args:
             x: Level features or flow to upsample
@@ -280,15 +311,15 @@ class ModelPWCNet(object):
             up_flow3 = self.deconv3(flow3)
             up_feat3 = self.upfeat3(x)
         """
-        op_name = '{}{}'.format(name, lvl)
-        with tf.variable_scope('upsample'):
+        op_name = "{}{}".format(name, lvl)
+        with tf.variable_scope("upsample"):
             # tf.layers.conv2d_transpose(inputs, filters, kernel_size, strides=(1, 1), padding='valid', ... , name)
-            return tf.layers.conv2d_transpose(x, 2, 4, 2, 'same', name=op_name)
+            return tf.layers.conv2d_transpose(x, 2, 4, 2, "same", name=op_name)
 
     ###
     # Cost Volume helpers
     ###
-    def corr(self, c1, warp, lvl, name='corr'):
+    def corr(self, c1, warp, lvl, name="corr"):
         """Build cost volume for associating a pixel from Image1 with its corresponding pixels in Image2.
         Args:
             c1: The level of the feature pyramid of Image1
@@ -335,14 +366,14 @@ class ModelPWCNet(object):
         corr2 = self.corr(c12, warp2)
         corr2 = self.leakyRELU(corr2)
         """
-        op_name = 'corr{}'.format(lvl)
+        op_name = "corr{}".format(lvl)
         with tf.name_scope(name):
-            return cost_volume(c1, warp, self.opts['search_range'], op_name)
+            return cost_volume(c1, warp, self.opts["search_range"], op_name)
 
     ###
     # Optical flow estimator helpers
     ###
-    def predict_flow(self, corr, c1, up_flow, up_feat, lvl, name='predict_flow'):
+    def predict_flow(self, corr, c1, up_flow, up_feat, lvl, name="predict_flow"):
         """Estimate optical flow.
         Args:
             corr: The cost volume at level lvl
@@ -473,7 +504,7 @@ class ModelPWCNet(object):
             x = torch.cat((self.conv2_4(x), x),1)
             flow2 = self.predict_flow2(x)
         """
-        op_name = 'flow{}'.format(lvl)
+        op_name = "flow{}".format(lvl)
         init = tf.keras.initializers.he_normal()
         with tf.variable_scope(name):
             if c1 is None and up_flow is None and up_feat is None:
@@ -481,34 +512,80 @@ class ModelPWCNet(object):
             else:
                 x = tf.concat([corr, c1, up_flow, up_feat], axis=3)
 
-            conv = tf.layers.conv2d(x, 128, 3, 1, 'same', kernel_initializer=init, name='conv{}_0'.format(lvl))
+            conv = tf.layers.conv2d(
+                x,
+                128,
+                3,
+                1,
+                "same",
+                kernel_initializer=init,
+                name="conv{}_0".format(lvl),
+            )
             act = tf.nn.leaky_relu(conv, alpha=0.1)  # default alpha is 0.2 for TF
-            x = tf.concat([act, x], axis=3) if self.opts['use_dense_cx'] else act
+            x = tf.concat([act, x], axis=3) if self.opts["use_dense_cx"] else act
 
-            conv = tf.layers.conv2d(x, 128, 3, 1, 'same', kernel_initializer=init, name='conv{}_1'.format(lvl))
+            conv = tf.layers.conv2d(
+                x,
+                128,
+                3,
+                1,
+                "same",
+                kernel_initializer=init,
+                name="conv{}_1".format(lvl),
+            )
             act = tf.nn.leaky_relu(conv, alpha=0.1)
-            x = tf.concat([act, x], axis=3) if self.opts['use_dense_cx'] else act
+            x = tf.concat([act, x], axis=3) if self.opts["use_dense_cx"] else act
 
-            conv = tf.layers.conv2d(x, 96, 3, 1, 'same', kernel_initializer=init, name='conv{}_2'.format(lvl))
+            conv = tf.layers.conv2d(
+                x,
+                96,
+                3,
+                1,
+                "same",
+                kernel_initializer=init,
+                name="conv{}_2".format(lvl),
+            )
             act = tf.nn.leaky_relu(conv, alpha=0.1)
-            x = tf.concat([act, x], axis=3) if self.opts['use_dense_cx'] else act
+            x = tf.concat([act, x], axis=3) if self.opts["use_dense_cx"] else act
 
-            conv = tf.layers.conv2d(x, 64, 3, 1, 'same', kernel_initializer=init, name='conv{}_3'.format(lvl))
+            conv = tf.layers.conv2d(
+                x,
+                64,
+                3,
+                1,
+                "same",
+                kernel_initializer=init,
+                name="conv{}_3".format(lvl),
+            )
             act = tf.nn.leaky_relu(conv, alpha=0.1)
-            x = tf.concat([act, x], axis=3) if self.opts['use_dense_cx'] else act
+            x = tf.concat([act, x], axis=3) if self.opts["use_dense_cx"] else act
 
-            conv = tf.layers.conv2d(x, 32, 3, 1, 'same', kernel_initializer=init, name='conv{}_4'.format(lvl))
-            act = tf.nn.leaky_relu(conv, alpha=0.1)  # will also be used as an input by the context network
-            upfeat = tf.concat([act, x], axis=3, name='upfeat{}'.format(lvl)) if self.opts['use_dense_cx'] else act
+            conv = tf.layers.conv2d(
+                x,
+                32,
+                3,
+                1,
+                "same",
+                kernel_initializer=init,
+                name="conv{}_4".format(lvl),
+            )
+            act = tf.nn.leaky_relu(
+                conv, alpha=0.1
+            )  # will also be used as an input by the context network
+            upfeat = (
+                tf.concat([act, x], axis=3, name="upfeat{}".format(lvl))
+                if self.opts["use_dense_cx"]
+                else act
+            )
 
-            flow = tf.layers.conv2d(upfeat, 2, 3, 1, 'same', name=op_name)
+            flow = tf.layers.conv2d(upfeat, 2, 3, 1, "same", name=op_name)
 
             return upfeat, flow
 
     ###
     # PWC-Net context network helpers
     ###
-    def refine_flow(self, feat, flow, lvl, name='ctxt'):
+    def refine_flow(self, feat, flow, lvl, name="ctxt"):
         """Post-ptrocess the estimated optical flow using a "context" nn.
         Args:
             feat: Features of the second-to-last layer from the optical flow estimator
@@ -556,29 +633,92 @@ class ModelPWCNet(object):
             x = self.dc_conv4(self.dc_conv3(self.dc_conv2(self.dc_conv1(x))))
             flow2 += self.dc_conv7(self.dc_conv6(self.dc_conv5(x)))
         """
-        op_name = 'refined_flow{}'.format(lvl)
+        op_name = "refined_flow{}".format(lvl)
         init = tf.keras.initializers.he_normal()
         with tf.variable_scope(name):
-            x = tf.layers.conv2d(feat, 128, 3, 1, 'same', dilation_rate=1, kernel_initializer=init, name='dc_conv{}1'.format(lvl))
+            x = tf.layers.conv2d(
+                feat,
+                128,
+                3,
+                1,
+                "same",
+                dilation_rate=1,
+                kernel_initializer=init,
+                name="dc_conv{}1".format(lvl),
+            )
             x = tf.nn.leaky_relu(x, alpha=0.1)  # default alpha is 0.2 for TF
-            x = tf.layers.conv2d(x, 128, 3, 1, 'same', dilation_rate=2, kernel_initializer=init, name='dc_conv{}2'.format(lvl))
+            x = tf.layers.conv2d(
+                x,
+                128,
+                3,
+                1,
+                "same",
+                dilation_rate=2,
+                kernel_initializer=init,
+                name="dc_conv{}2".format(lvl),
+            )
             x = tf.nn.leaky_relu(x, alpha=0.1)
-            x = tf.layers.conv2d(x, 128, 3, 1, 'same', dilation_rate=4, kernel_initializer=init, name='dc_conv{}3'.format(lvl))
+            x = tf.layers.conv2d(
+                x,
+                128,
+                3,
+                1,
+                "same",
+                dilation_rate=4,
+                kernel_initializer=init,
+                name="dc_conv{}3".format(lvl),
+            )
             x = tf.nn.leaky_relu(x, alpha=0.1)
-            x = tf.layers.conv2d(x, 96, 3, 1, 'same', dilation_rate=8, kernel_initializer=init, name='dc_conv{}4'.format(lvl))
+            x = tf.layers.conv2d(
+                x,
+                96,
+                3,
+                1,
+                "same",
+                dilation_rate=8,
+                kernel_initializer=init,
+                name="dc_conv{}4".format(lvl),
+            )
             x = tf.nn.leaky_relu(x, alpha=0.1)
-            x = tf.layers.conv2d(x, 64, 3, 1, 'same', dilation_rate=16, kernel_initializer=init, name='dc_conv{}5'.format(lvl))
+            x = tf.layers.conv2d(
+                x,
+                64,
+                3,
+                1,
+                "same",
+                dilation_rate=16,
+                kernel_initializer=init,
+                name="dc_conv{}5".format(lvl),
+            )
             x = tf.nn.leaky_relu(x, alpha=0.1)
-            x = tf.layers.conv2d(x, 32, 3, 1, 'same', dilation_rate=1, kernel_initializer=init, name='dc_conv{}6'.format(lvl))
+            x = tf.layers.conv2d(
+                x,
+                32,
+                3,
+                1,
+                "same",
+                dilation_rate=1,
+                kernel_initializer=init,
+                name="dc_conv{}6".format(lvl),
+            )
             x = tf.nn.leaky_relu(x, alpha=0.1)
-            x = tf.layers.conv2d(x, 2, 3, 1, 'same', dilation_rate=1, kernel_initializer=init, name='dc_conv{}7'.format(lvl))
+            x = tf.layers.conv2d(
+                x,
+                2,
+                3,
+                1,
+                "same",
+                dilation_rate=1,
+                kernel_initializer=init,
+                name="dc_conv{}7".format(lvl),
+            )
 
             return tf.add(flow, x, name=op_name)
 
     ###
     # PWC-Net nn builder
     ###
-    def nn(self, x_tnsr, name='pwcnet'):
+    def nn(self, x_tnsr, name="pwcnet"):
         """Defines and connects the backbone neural nets
         Args:
             inputs: TF placeholder that contains the input frame pairs in [batch_size, 2, H, W, 3] format
@@ -597,15 +737,13 @@ class ModelPWCNet(object):
             MIT License
         """
         with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
-
             # Extract pyramids of CNN features from both input images (1-based lists))
             c1, c2 = self.extract_features(x_tnsr)
 
             flow_pyr = []
 
-            for lvl in range(self.opts['pyr_lvls'], self.opts['flow_pred_lvl'] - 1, -1):
-
-                if lvl == self.opts['pyr_lvls']:
+            for lvl in range(self.opts["pyr_lvls"], self.opts["flow_pred_lvl"] - 1, -1):
+                if lvl == self.opts["pyr_lvls"]:
                     # Compute the cost volume
                     corr = self.corr(c1[lvl], c2[lvl], lvl)
 
@@ -613,37 +751,41 @@ class ModelPWCNet(object):
                     upfeat, flow = self.predict_flow(corr, None, None, None, lvl)
                 else:
                     # Warp level of Image1's using the upsampled flow
-                    scaler = 20. / 2**lvl  # scaler values are 0.625, 1.25, 2.5, 5.0
+                    scaler = 20.0 / 2**lvl  # scaler values are 0.625, 1.25, 2.5, 5.0
                     warp = self.warp(c2[lvl], up_flow * scaler, lvl)
 
                     # Compute the cost volume
                     corr = self.corr(c1[lvl], warp, lvl)
 
                     # Estimate the optical flow
-                    upfeat, flow = self.predict_flow(corr, c1[lvl], up_flow, up_feat, lvl)
+                    upfeat, flow = self.predict_flow(
+                        corr, c1[lvl], up_flow, up_feat, lvl
+                    )
 
                 _, lvl_height, lvl_width, _ = tf.unstack(tf.shape(c1[lvl]))
 
-                if lvl != self.opts['flow_pred_lvl']:
-                    if self.opts['use_res_cx']:
+                if lvl != self.opts["flow_pred_lvl"]:
+                    if self.opts["use_res_cx"]:
                         flow = self.refine_flow(upfeat, flow, lvl)
 
                     # Upsample predicted flow and the features used to compute predicted flow
                     flow_pyr.append(flow)
 
-                    up_flow = self.deconv(flow, lvl, 'up_flow')
-                    up_feat = self.deconv(upfeat, lvl, 'up_feat')
+                    up_flow = self.deconv(flow, lvl, "up_flow")
+                    up_feat = self.deconv(upfeat, lvl, "up_feat")
                 else:
                     # Refine the final predicted flow
                     flow = self.refine_flow(upfeat, flow, lvl)
                     flow_pyr.append(flow)
 
                     # Upsample the predicted flow (final output) to match the size of the images
-                    scaler = 2**self.opts['flow_pred_lvl']
-                    #if self.dbg:
+                    scaler = 2 ** self.opts["flow_pred_lvl"]
+                    # if self.dbg:
                     #    print(f'Upsampling {flow.op.name} by {scaler} in each dimension.')
                     size = (lvl_height * scaler, lvl_width * scaler)
-                    flow_pred = tf.image.resize_bilinear(flow, size, name="flow_pred") * scaler
+                    flow_pred = (
+                        tf.image.resize_bilinear(flow, size, name="flow_pred") * scaler
+                    )
                     break
 
             return flow_pred, flow_pyr
