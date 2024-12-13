@@ -34,7 +34,7 @@ echo "[INFO] env: $CONDA_DEFAULT_ENV"
 
 echo "[INFO] start running a test..."
 mkdir -p ${RESULT_DIR}
-python3 test_movobjextractor.py \
+python3 ${SCRIPT_DIR}/../test_movobjextractor.py \
 --dataset=DAVIS2016 \
 --batch_size=1 \
 --test_crop=1.0 \
