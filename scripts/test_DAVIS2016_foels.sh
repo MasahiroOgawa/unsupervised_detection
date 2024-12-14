@@ -29,6 +29,8 @@ mkdir -p ${DOWNLOAD_DIR}
 echo "[INFO] finished downloading."
 
 echo "[INFO] set conda env"
+# deactivate uv venv first. otherwise, conda env will be hide.
+deactivate
 eval "$(conda shell.bash activate contextual-information-separation)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
 
