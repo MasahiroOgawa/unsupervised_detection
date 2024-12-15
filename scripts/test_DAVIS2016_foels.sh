@@ -25,12 +25,12 @@ mkdir -p ${DOWNLOAD_DIR}
 	unzip DAVIS-data.zip
 	rm DAVIS-data.zip
     fi
+	cp ${SCRIPT_DIR}/../data/trainval_movobj.txt ${DATASET_FILE}/ImageSets/480p/
 )
 echo "[INFO] finished downloading."
 
 echo "[INFO] set conda env"
-# deactivate uv venv first. otherwise, conda env will be hide.
-deactivate
+echo "[INFO] deactivate uv venv first. otherwise, conda env will be hide."
 eval "$(conda shell.bash activate contextual-information-separation)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
 

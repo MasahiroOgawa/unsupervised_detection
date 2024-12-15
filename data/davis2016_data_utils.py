@@ -23,7 +23,7 @@ class DirectoryIterator(object):
         }
         part_file = os.path.join(directory, name_division.get(part))
         if not os.path.isfile(part_file):
-            raise IOError("Partition file not found")
+            raise IOError(f"Partition file: {part_file} not found")
         self.components = np.loadtxt(part_file, dtype=np.str)
 
         # First count how many experiments are out there
