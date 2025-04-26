@@ -37,7 +37,7 @@ def download_file(url, destination_path, description="Downloading file name"):
         ):
             for data in response.iter_content(block_size):
                 size = file.write(data)
-                bar.update(len(size))
+                bar.update(size)
 
         if total_size != 0 and bar.n != total_size:
             logging.error("Something went wrong during download")
