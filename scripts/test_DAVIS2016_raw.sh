@@ -18,20 +18,20 @@ mkdir -p ${DOWNLOAD_DIR}
 (
     cd ${DOWNLOAD_DIR}   
     if [ ! -f ${CKPT_FILE}.data* ]; then
-	echo "[INFO] no checkpoint file found. start downloading it."
-	wget https://rpg.ifi.uzh.ch/data/unsupervised_detection_models.zip
-	unzip unsupervised_detection_models.zip
-	rm unsupervised_detection_models.zip
+			echo "[INFO] no checkpoint file found. start downloading it."
+			wget https://rpg.ifi.uzh.ch/data/unsupervised_detection_models.zip
+			unzip unsupervised_detection_models.zip
+			rm unsupervised_detection_models.zip
     fi
     if [ ! -f ${PWC_CKPT_FILE} ]; then
-	echo "[INFO] no pwc checkpoint file found. start downloading it."
-	gdown --folder "https://drive.google.com/drive/folders/1gtGx_6MjUQC5lZpl6-Ia718Y_0pvcYou"
+			echo "[INFO] no pwc checkpoint file found. start downloading it."
+			gdown --folder "https://drive.google.com/drive/folders/1gtGx_6MjUQC5lZpl6-Ia718Y_0pvcYou"
     fi
     if [ ! -e ${DATASET_FILE} ]; then
-	echo "[INFO] no DAVIS data found. start downloading it."
-	wget https://graphics.ethz.ch/Downloads/Data/Davis/DAVIS-data.zip
-	unzip DAVIS-data.zip
-	rm DAVIS-data.zip
+			echo "[INFO] no DAVIS data found. start downloading it."
+			wget https://graphics.ethz.ch/Downloads/Data/Davis/DAVIS-data.zip
+			unzip DAVIS-data.zip
+			rm DAVIS-data.zip
     fi
 )
 echo "[INFO] finished downloading."
