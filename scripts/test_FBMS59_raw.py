@@ -1,9 +1,8 @@
 #### python
-# filepath: /home/mas/proj/study/reconstruct4D/reconstruct4D/ext/unsupervised_detection/scripts/test_FBMS59_raw.py
 import os
 import subprocess
 import logging
-import reconstruct4D.ext.unsupervised_detection.scripts.download_util as download_util
+import download_util
 
 # --- Fixed Parameters ---
 LOG_LEVEL = logging.INFO
@@ -81,7 +80,7 @@ def main():
     logging.info("Starting test generation...")
     test_command = [
         "python3",
-        os.path.join(script_dir, "test_generator.py"),  # Path to test_generator.py
+        os.path.join(base_dir, "test_generator.py"),  # Path to test_generator.py
         f"--dataset={dataset_name}",
         f"--ckpt_file={model_ckpt_base}",
         f"--flow_ckpt={pwc_ckpt_path}",
