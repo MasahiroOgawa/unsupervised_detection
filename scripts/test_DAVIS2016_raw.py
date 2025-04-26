@@ -3,7 +3,7 @@
 import os
 import subprocess
 import logging
-import download_checkpoint_dataset as dcd  # Import the download utility
+import reconstruct4D.ext.unsupervised_detection.scripts.download_util as download_util  # Import the download utility
 
 # --- Fixed Parameters ---
 LOG_LEVEL = logging.INFO
@@ -55,7 +55,7 @@ def main():
     os.makedirs(results_dir, exist_ok=True)  # Ensure results dir exists
 
     # 1. Dataset
-    if not dcd.ensure_dataset(
+    if not download_util.ensure_dataset(
         dataset_name,
         target_dataset_dir,
         dataset_download_url,
@@ -67,14 +67,16 @@ def main():
         exit(1)
 
     # 2. Model Checkpoint
-    if not dcd.ensure_model_checkpoint(
+    if not download_util.ensure_model_checkpoint(
         model_ckpt_path, model_ckpt_zip_url, model_ckpt_zip_filename, download_dir
     ):
         logging.error(f"Failed to prepare model checkpoint {model_ckpt_path}. Exiting.")
         exit(1)
 
     # 3. PWCNet Checkpoint
-    if not dcd.ensure_pwc_checkpoint(pwc_ckpt_base, pwc_gdown_folder_url, download_dir):
+    if not download_util.ensure_pwc_checkpoint(
+        pwc_ckpt_base, pwc_gdown_folder_url, download_dir
+    ):
         logging.error(f"Failed to prepare PWCNet checkpoint {pwc_ckpt_base}. Exiting.")
         exit(1)
 

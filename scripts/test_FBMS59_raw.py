@@ -3,7 +3,7 @@
 import os
 import subprocess
 import logging
-import download_checkpoint_dataset as dcd  # Import the download utility
+import reconstruct4D.ext.unsupervised_detection.scripts.download_util as download_util
 
 # --- Fixed Parameters ---
 LOG_LEVEL = logging.INFO
@@ -27,30 +27,28 @@ def main():
     # Dataset
     dataset_name = "FBMS59"
     target_dataset_dir = os.path.join(download_dir, "FBMS59")
-    # Note: Verify this URL and the contents (Trainingset vs. Testset if applicable)
     dataset_download_url = "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset_large.zip"
-    dataset_zip_base = "FBMS-59"
-    dataset_extracted_folder = "FBMS-59"  # Verify this folder name inside the zip
 
     # Model Checkpoint
+    model_ckpt_zip_url = "https://rpg.ifi.uzh.ch/data/unsupervised_detection_models.zip"
     model_ckpt_base = os.path.join(
         download_dir,
         "unsupervised_detection_models",
         "fbms_best_model",
         "model.best",
-    )
-    model_ckpt_path = model_ckpt_base + ".data-00000-of-00001"
-    # Assuming the same model zip contains the FBMS model
-    model_ckpt_zip_url = "https://rpg.ifi.uzh.ch/data/unsupervised_detection_models.zip"
-    model_ckpt_zip_filename = "unsupervised_detection_models.zip"
+    )  # this will be used as the argument of test_generator.py
+    model_ckpt_path = (
+        model_ckpt_base + ".data-00000-of-00001"
+    )  # actual checkpoint path.
 
     # PWCNet Checkpoint
-    pwc_ckpt_dir = os.path.join(
-        download_dir, "pwcnet-lg-6-2-multisteps-chairsthingsmix"
-    )
-    pwc_ckpt_path = os.path.join(pwc_ckpt_dir, "pwcnet.ckpt-595000.data-00000-of-00001")
     pwc_gdown_folder_url = (
         "https://drive.google.com/drive/folders/1gtGx_6MjUQC5lZpl6-Ia718Y_0pvcYou"
+    )
+    pwc_ckpt_path = os.path.join(
+        download_dir,
+        "pwcnet-lg-6-2-multisteps-chairsthingsmix",
+        "pwcnet.ckpt-595000.data-00000-of-00001",
     )
 
     # --- Ensure Prerequisites ---
@@ -59,26 +57,21 @@ def main():
     os.makedirs(results_dir, exist_ok=True)  # Ensure results dir exists
 
     # 1. Dataset
-    if not dcd.ensure_dataset(
+    if not download_util.ensure_dataset(
         dataset_name,
-        target_dataset_dir,
         dataset_download_url,
-        dataset_zip_base,
-        dataset_extracted_folder,
-        download_dir,
+        target_dataset_dir,
     ):
         logging.error(f"Failed to prepare dataset {dataset_name}. Exiting.")
         exit(1)
 
     # 2. Model Checkpoint
-    if not dcd.ensure_model_checkpoint(
-        model_ckpt_path, model_ckpt_zip_url, model_ckpt_zip_filename, download_dir
-    ):
+    if not download_util.ensure_model_checkpoint(model_ckpt_zip_url, model_ckpt_path):
         logging.error(f"Failed to prepare model checkpoint {model_ckpt_path}. Exiting.")
         exit(1)
 
     # 3. PWCNet Checkpoint
-    if not dcd.ensure_pwc_checkpoint(pwc_ckpt_path, pwc_gdown_folder_url, download_dir):
+    if not download_util.ensure_pwc_checkpoint(pwc_gdown_folder_url, pwc_ckpt_path):
         logging.error(f"Failed to prepare PWCNet checkpoint {pwc_ckpt_path}. Exiting.")
         exit(1)
 
