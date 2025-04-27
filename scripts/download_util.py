@@ -1,7 +1,6 @@
 import os
 import requests
 import zipfile
-import shutil
 import subprocess
 import logging
 from tqdm import tqdm
@@ -105,11 +104,18 @@ def run_gdown(folder_url, destination_dir):
 
 def ensure_dataset(
     dataset_name,
-    download_url,
+    download_urls,
     destination_dir,
 ):
-    """Checks for dataset, downloads and extracts if missing."""
-    if os.path.exists(destination_dir):
+    """
+    Checks for dataset, downloads and extracts if missing.
+
+    Args:
+        dataset_name (str): Name of the dataset. (e.g. "FBMS")
+        download_urls (str): URLs to download the dataset zip file. (e.g. ["https://example.com/dataset.zip","https://example.com/dataset2.zip"])
+        destination_dir (str): Directory to save the dataset. (e.g. "/home/user/downloads/FBMS")
+    """
+    if os.path.exists(destination_dir) and os.listdir(destination_dir):
         logging.info(
             f"Dataset '{dataset_name}' already exists at {destination_dir}. Skipping download."
         )
@@ -118,30 +124,35 @@ def ensure_dataset(
     logging.info(
         f"Dataset '{dataset_name}' not found at {destination_dir}. Downloading..."
     )
-    os.makedirs(destination_dir, exist_ok=True)
-    zip_basefname = dataset_name
-    zip_filepath = os.path.join(destination_dir, f"{zip_basefname}.zip")
-    zip_extracted_path = os.path.join(destination_dir, dataset_name)
+    for download_url in download_urls:
+        os.makedirs(destination_dir, exist_ok=True)
+        zip_basefname = dataset_name
+        zip_filepath = os.path.join(destination_dir, f"{zip_basefname}.zip")
+        zip_extracted_path = os.path.join(destination_dir, dataset_name)
 
-    if not download_file(download_url, zip_filepath):
-        return False  # Stop if download fails
+        if not download_file(download_url, zip_filepath):
+            logging.error(
+                f"Failed to download {dataset_name} zip file from {download_url}."
+            )
+            return False  # Stop if download fails
 
-    if not extract_zip(zip_filepath, zip_extracted_path):
-        return False  # Stop if extraction fails
+        if not extract_zip(zip_filepath, zip_extracted_path):
+            logging.error(f"Failed to extract {zip_filepath} to {zip_extracted_path}.")
+            return False  # Stop if extraction fails
 
-    # Check if the extracted folder exists
-    if not os.path.exists(zip_extracted_path):
-        logging.error(
-            f"Expected extracted folder '{zip_extracted_path}' not found after unzipping."
-        )
-        return False
+        # Check if the extracted folder exists
+        if not os.path.exists(zip_extracted_path):
+            logging.error(
+                f"Expected extracted folder '{zip_extracted_path}' not found after unzipping."
+            )
+            return False
 
-    # Cleanup zip file
-    try:
-        logging.info(f"Cleaning up {zip_filepath}")
-        os.remove(zip_filepath)
-    except OSError as e:
-        logging.warning(f"Could not remove zip file {zip_filepath}. Error: {e}")
+        # Cleanup zip file
+        try:
+            logging.info(f"Cleaning up {zip_filepath}")
+            os.remove(zip_filepath)
+        except OSError as e:
+            logging.warning(f"Could not remove zip file {zip_filepath}. Error: {e}")
 
     logging.info(f"Successfully prepared dataset '{dataset_name}'.")
     return True

@@ -8,7 +8,10 @@ import download_util
 def main():
     # --- Fixed Parameters ---
     dataset_name = "FBMS"
-    dataset_download_url = "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset_large.zip"
+    dataset_download_urls = [
+        "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset.zip",
+        "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Testset.zip",
+    ]
     LOG_LEVEL = logging.INFO
     TEST_CROP = 0.9  # FBMS default
     TEST_TEMPORAL_SHIFT = 1
@@ -58,7 +61,7 @@ def main():
     # 1. Dataset
     if not download_util.ensure_dataset(
         dataset_name,
-        dataset_download_url,
+        dataset_download_urls,
         target_dataset_dir,
     ):
         logging.error(f"Failed to prepare dataset {dataset_name}. Exiting.")
