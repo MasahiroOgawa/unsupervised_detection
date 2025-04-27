@@ -13,8 +13,8 @@ def main():
     #     "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Testset.zip",
     # ]
     dataset_download_urls = [
-        "https://examplefile.com/file-download/36",
-        "https://examplefile.com/file-download/429",
+        "https://sample-files.com/downloads/compressed/zip/basic-text.zip",
+        "https://sample-files.com/downloads/compressed/zip/mixed-files.zip",
     ]
 
     LOG_LEVEL = logging.INFO
