@@ -8,13 +8,9 @@ import download_util
 def main():
     # --- Fixed Parameters ---
     dataset_name = "FBMS"
-    # dataset_download_urls = [
-    #     "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset.zip",
-    #     "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Testset.zip",
-    # ]
     dataset_download_urls = [
-        "https://sample-files.com/downloads/compressed/zip/basic-text.zip",
-        "https://sample-files.com/downloads/compressed/zip/mixed-files.zip",
+        "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset.zip",
+        "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Testset.zip",
     ]
 
     LOG_LEVEL = logging.INFO
