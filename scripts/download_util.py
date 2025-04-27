@@ -166,7 +166,7 @@ def ensure_dataset(
     Args:
         dataset_name (str): Name of the dataset. (e.g. "FBMS")
         download_urls (str): URLs to download the dataset zip file. (e.g. ["https://example.com/dataset.zip","https://example.com/dataset2.zip"])
-        destination_dir (str): Directory to save the dataset. (e.g. "/home/user/downloads")
+        destination_dir (str): Directory to save the dataset. (e.g. "/home/user/downloads"). So we assumed the zip file has top level directory (e.g. Trainset/, Testser/), and the unzip result will not be mixed if we specify the same destination.
     """
     zip_extracted_path = os.path.join(destination_dir, dataset_name)
     if os.path.exists(zip_extracted_path):
