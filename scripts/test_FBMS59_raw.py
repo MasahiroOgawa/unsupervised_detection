@@ -4,17 +4,19 @@ import subprocess
 import logging
 import download_util
 
-# --- Fixed Parameters ---
-LOG_LEVEL = logging.INFO
-TEST_CROP = 1.0  # FBMS default
-TEST_TEMPORAL_SHIFT = 1
-GENERATE_VISUALIZATION = True
-# --- End Fixed Parameters ---
-
-logging.basicConfig(level=LOG_LEVEL, format="[%(levelname)s] %(message)s")
-
 
 def main():
+    # --- Fixed Parameters ---
+    dataset_name = "FBMS59"
+    dataset_download_url = "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset_large.zip"
+    LOG_LEVEL = logging.INFO
+    TEST_CROP = 0.9  # FBMS default
+    TEST_TEMPORAL_SHIFT = 1
+    GENERATE_VISUALIZATION = True
+    # --- End Fixed Parameters ---
+
+    logging.basicConfig(level=LOG_LEVEL, format="[%(levelname)s] %(message)s")
+
     # --- Define Paths and URLs for FBMS-59 ---
     script_dir = os.path.dirname(os.path.realpath(__file__))
     base_dir = os.path.abspath(
@@ -24,9 +26,7 @@ def main():
     results_dir = os.path.join(base_dir, "results", "FBMS59")  # Define results dir
 
     # Dataset
-    dataset_name = "FBMS59"
-    target_dataset_dir = os.path.join(download_dir, "FBMS59")
-    dataset_download_url = "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset_large.zip"
+    target_dataset_dir = os.path.join(download_dir, dataset_name)
 
     # Model Checkpoint
     model_ckpt_zip_url = "https://rpg.ifi.uzh.ch/data/unsupervised_detection_models.zip"
