@@ -46,23 +46,23 @@ def download_file(url, destination_path, retries=3, timeout=60):
                 else 0
             )
             if total_size != 0 and actual_size != total_size:
-                logging.error(
-                    f"Downloaded file size mismatch for {destination_path}: Expected {total_size} bytes, got {actual_size} bytes."
+                logging.warning(
+                    f"Downloaded file size mismatch for {destination_path}: Server reported {total_size} bytes, but got {actual_size} bytes."
+                    "Processing anyway as download completed."
                 )
+            elif total_size == 0 and actual_size == 0:
+                logging.error(f"Downloaded file is empty: {destination_path}.")
                 if os.path.exists(destination_path):
                     os.remove(destination_path)
                 if attempt < retries - 1:
                     logging.info(f"Retrying download for {url} in 5 seconds...")
-                    time.sleep(5)  # Wait before retrying
+                    time.sleep(5)
                     continue
                 else:
                     logging.error(
                         f"Failed to download {url} after {retries} attempts. Giving up."
                     )
                     return False
-            elif total_size == 0 and actual_size == 0:
-                logging.error(f"Downloaded file is empty: {destination_path}.")
-                return False
 
             logging.info(f"Downloaded successfully from {url}  to {destination_path}")
             return True
