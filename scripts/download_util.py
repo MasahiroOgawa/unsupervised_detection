@@ -4,49 +4,102 @@ import zipfile
 import subprocess
 import logging
 from tqdm import tqdm
+import time
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 
-def download_file(url, destination_path):
+def download_file(url, destination_path, retries=3, timeout=60):
     """_summary_
-    Downloads a file from a URL to a destination path.
+    Downloads a file from a URL to a destination path with progress bar, retries, and timeout.
 
     Args:
-        url (_type_): _description_
-        destination_path (_type_): _description_. full path of the destination file name.
+        url (str): URL to download from.
+        destination_path (str): full path of the destination file name.
+        retries (int, optional): Number of retries on failure. Defaults to 3.
+        timeout (int, optional): Timeout in seconds for the request. Defaults to 60.
     """
-    try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()  # raise an exception for HTTP errors
-        total_size = int(response.headers.get("content-length", 0))
-        block_size = 1024  # 1 Kibibyte
+    for attempt in range(retries):
+        logging.info(f"Attempt {attempt + 1} of {retries} to download {url}")
+        try:
+            response = requests.get(url, stream=True, timeout=timeout)
+            response.raise_for_status()  # raise an exception for HTTP errors
+            total_size = int(response.headers.get("content-length", 0))
+            block_size = 1024  # 1 Kibibyte
 
-        logging.info(f"Downloading from {url} to {destination_path}")
-        with open(destination_path, "wb") as file:
-            with tqdm(
-                desc="Downloading file",
-                total=total_size,
-                unit="iB",
-                unit_scale=True,
-                unit_divisor=block_size,
-            ) as bar:
-                for data in response.iter_content(block_size):
-                    size = file.write(data)
-                    bar.update(size)
+            with open(destination_path, "wb") as file:
+                with tqdm(
+                    desc="Downloading file",
+                    total=total_size,
+                    unit="iB",
+                    unit_scale=True,
+                    unit_divisor=block_size,
+                ) as bar:
+                    for data in response.iter_content(block_size):
+                        size = file.write(data)
+                        bar.update(size)
 
-        if total_size != 0 and bar.n != total_size:
-            logging.error("Something went wrong during download")
+            # Check size after download
+            actual_size = (
+                os.path.getsize(destination_path)
+                if os.path.exists(destination_path)
+                else 0
+            )
+            if total_size != 0 and actual_size != total_size:
+                logging.error(
+                    f"Downloaded file size mismatch for {destination_path}: Expected {total_size} bytes, got {actual_size} bytes."
+                )
+                if os.path.exists(destination_path):
+                    os.remove(destination_path)
+                if attempt < retries - 1:
+                    logging.info(f"Retrying download for {url} in 5 seconds...")
+                    time.sleep(5)  # Wait before retrying
+                    continue
+                else:
+                    logging.error(
+                        f"Failed to download {url} after {retries} attempts. Giving up."
+                    )
+                    return False
+            elif total_size == 0 and actual_size == 0:
+                logging.error(f"Downloaded file is empty: {destination_path}.")
+                return False
+
+            logging.info(f"Downloaded successfully from {url}  to {destination_path}")
+            return True
+
+        except requests.exceptions.Timeout:
+            logging.error(
+                f"Timeout ({timeout}s) occurred while downloading {url} on attempt {attempt + 1}."
+            )
+            if os.path.exists(destination_path):
+                os.remove(destination_path)
+            if attempt < retries - 1:
+                logging.info(f"Retrying download for {url} in 5 seconds...")
+                time.sleep(5)
+            else:
+                logging.error(
+                    f"Failed to download {url} after {retries} attempts. Giving up."
+                )
+                return False
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Failed to download {url} on attempt {attempt + 1}: {e}")
+            if os.path.exists(destination_path):
+                os.remove(destination_path)
+            if attempt < retries - 1:
+                logging.info(f"Retrying download for {url} in 5 seconds...")
+                time.sleep(5)
+            else:
+                logging.error(
+                    f"Failed to download {url} after {retries} attempts. Giving up."
+                )
+                return False
+        except Exception as e:
+            logging.error(f"An unknown error occurred while downloading {url}: {e}")
+            if os.path.exists(destination_path):
+                os.remove(destination_path)
             return False
 
-        logging.info(f"Downloaded successfully from {url}  to {destination_path}")
-        return True
-
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Failed to download {url}: {e}")
-        if os.path.exists(destination_path):
-            os.remove(destination_path)
-        return False
+    return False  # If all attempts fail
 
 
 def extract_zip(zip_path, extract_to_dir):
@@ -62,7 +115,7 @@ def extract_zip(zip_path, extract_to_dir):
         return False
 
     try:
-        logging.info(f"Downloading {zip_path} to {extract_to_dir}")
+        logging.info(f"Extracting {zip_path} to {extract_to_dir}")
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(extract_to_dir)
         logging.info(f"Successfully extracted {zip_path} to {extract_to_dir}")
@@ -113,9 +166,10 @@ def ensure_dataset(
     Args:
         dataset_name (str): Name of the dataset. (e.g. "FBMS")
         download_urls (str): URLs to download the dataset zip file. (e.g. ["https://example.com/dataset.zip","https://example.com/dataset2.zip"])
-        destination_dir (str): Directory to save the dataset. (e.g. "/home/user/downloads/FBMS")
+        destination_dir (str): Directory to save the dataset. (e.g. "/home/user/downloads")
     """
-    if os.path.exists(destination_dir) and os.listdir(destination_dir):
+    zip_extracted_path = os.path.join(destination_dir, dataset_name)
+    if os.path.exists(zip_extracted_path):
         logging.info(
             f"Dataset '{dataset_name}' already exists at {destination_dir}. Skipping download."
         )
@@ -128,7 +182,6 @@ def ensure_dataset(
         os.makedirs(destination_dir, exist_ok=True)
         zip_basefname = dataset_name
         zip_filepath = os.path.join(destination_dir, f"{zip_basefname}.zip")
-        zip_extracted_path = os.path.join(destination_dir, dataset_name)
 
         if not download_file(download_url, zip_filepath):
             logging.error(

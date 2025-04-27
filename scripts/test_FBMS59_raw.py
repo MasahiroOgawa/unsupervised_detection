@@ -8,10 +8,15 @@ import download_util
 def main():
     # --- Fixed Parameters ---
     dataset_name = "FBMS"
+    # dataset_download_urls = [
+    #     "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset.zip",
+    #     "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Testset.zip",
+    # ]
     dataset_download_urls = [
-        "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset.zip",
-        "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Testset.zip",
+        "https://examplefile.com/file-download/36",
+        "https://examplefile.com/file-download/429",
     ]
+
     LOG_LEVEL = logging.INFO
     TEST_CROP = 0.9  # FBMS default
     TEST_TEMPORAL_SHIFT = 1
@@ -27,9 +32,6 @@ def main():
     )  # Go up one level from scripts/
     download_dir = os.path.join(base_dir, "download")
     results_dir = os.path.join(base_dir, "results", dataset_name)
-
-    # Dataset
-    target_dataset_dir = os.path.join(download_dir, dataset_name)
 
     # Model Checkpoint
     model_ckpt_zip_url = "https://rpg.ifi.uzh.ch/data/unsupervised_detection_models.zip"
@@ -62,7 +64,7 @@ def main():
     if not download_util.ensure_dataset(
         dataset_name,
         dataset_download_urls,
-        target_dataset_dir,
+        download_dir,
     ):
         logging.error(f"Failed to prepare dataset {dataset_name}. Exiting.")
         exit(1)
@@ -89,7 +91,7 @@ def main():
         f"--flow_ckpt={pwc_ckpt_path}",
         f"--test_crop={TEST_CROP}",
         f"--test_temporal_shift={TEST_TEMPORAL_SHIFT}",
-        f"--root_dir={target_dataset_dir}",
+        f"--root_dir={download_dir}/{dataset_name}",
         f"--test_save_dir={results_dir}",
     ]
     if GENERATE_VISUALIZATION:
