@@ -7,7 +7,7 @@ import download_util
 
 def main():
     # --- Fixed Parameters ---
-    dataset_name = "FBMS59"
+    dataset_name = "FBMS"
     dataset_download_url = "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset_large.zip"
     LOG_LEVEL = logging.INFO
     TEST_CROP = 0.9  # FBMS default
@@ -23,7 +23,7 @@ def main():
         os.path.join(script_dir, "..")
     )  # Go up one level from scripts/
     download_dir = os.path.join(base_dir, "download")
-    results_dir = os.path.join(base_dir, "results", "FBMS59")  # Define results dir
+    results_dir = os.path.join(base_dir, "results", dataset_name)
 
     # Dataset
     target_dataset_dir = os.path.join(download_dir, dataset_name)
