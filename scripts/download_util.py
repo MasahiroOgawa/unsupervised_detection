@@ -24,19 +24,17 @@ def download_file(url, destination_path):
         block_size = 1024  # 1 Kibibyte
 
         logging.info(f"Downloading from {url} to {destination_path}")
-        with (
-            open(destination_path, "wb") as file,
-            tqdm(
+        with open(destination_path, "wb") as file:
+            with tqdm(
                 desc="Downloading file",
                 total=total_size,
                 unit="iB",
                 unit_scale=True,
                 unit_divisor=block_size,
-            ) as bar,
-        ):
-            for data in response.iter_content(block_size):
-                size = file.write(data)
-                bar.update(size)
+            ) as bar:
+                for data in response.iter_content(block_size):
+                    size = file.write(data)
+                    bar.update(size)
 
         if total_size != 0 and bar.n != total_size:
             logging.error("Something went wrong during download")
