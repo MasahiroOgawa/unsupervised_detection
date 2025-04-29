@@ -16,6 +16,7 @@ import cv2
 import re
 import tensorflow as tf
 from data.aug_flips import random_flip_images
+import logging
 
 
 class DirectoryIterator(object):
@@ -35,6 +36,12 @@ class DirectoryIterator(object):
             "val": ["Testset"],
             "trainval": ["Trainingset", "Testset"],
         }
+        # check arguments
+        logging.info(f"DirectoryIterator receipved aprt = {part}")
+        if part not in parsing_dir:
+            raise ValueError(
+                f"part should be one of {list(parsing_dir.keys())}, but got {part}"
+            )
 
         data_dirs = [os.path.join(directory, d) for d in parsing_dir.get(part)]
         for d in data_dirs:
@@ -208,9 +215,9 @@ class FBMS59Reader(object):
         self.root_dir = root_dir
         self.max_temporal_len = max_temporal_len
         self.min_temporal_len = min_temporal_len
-        assert (
-            min_temporal_len < max_temporal_len
-        ), "Temporal lenghts are not consistent"
+        assert min_temporal_len < max_temporal_len, (
+            "Temporal lenghts are not consistent"
+        )
         assert min_temporal_len > 0, "Min temporal len should be positive"
         self.num_threads = num_threads
 
