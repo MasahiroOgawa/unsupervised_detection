@@ -30,7 +30,7 @@ conda case;
 ```bash
 conda env create -f environment.yml
 conda activate contextual-information-separation
-bash ./scripts/test_DAVIS2016_raw.sh
+bash ./scripts/test_DAVIS2016_raw.py
 ```
 you can even run inference for no annotated video.
 ```bash
