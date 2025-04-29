@@ -93,6 +93,7 @@ def main():
         f"--test_temporal_shift={TEST_TEMPORAL_SHIFT}",
         f"--root_dir={download_dir}/{rootdidr_name}",
         f"--test_save_dir={results_dir}",
+        "--test_partition=trainval_movobj",  # Use trainval partition for testing
     ]
     if GENERATE_VISUALIZATION:
         test_command.append("--generate_visualization")

@@ -33,11 +33,10 @@ gflags.DEFINE_integer("iters_gen", 3, "training iteration of generator per step"
 gflags.DEFINE_integer(
     "num_threads",
     6,
-    "Number of threads reading and "
-    "(optionally) preprocessing input files into queues",
+    "Number of threads reading and (optionally) preprocessing input files into queues",
 )
 gflags.DEFINE_bool(
-    "resume_train", False, "Whether to restore a trained" " model for training"
+    "resume_train", False, "Whether to restore a trained model for training"
 )
 
 # Path Parameters
@@ -48,7 +47,7 @@ gflags.DEFINE_string("train_partition", "trainval", "Training Partition to be us
 gflags.DEFINE_string(
     "dataset",
     "DAVIS2016",
-    "Dataset used for evaluation. " " Either SEGTRACK or FBMS or DAVIS2016",
+    "Dataset used for evaluation.  Either SEGTRACK or FBMS or DAVIS2016",
 )
 gflags.DEFINE_string(
     "recover_ckpt",
@@ -67,7 +66,7 @@ gflags.DEFINE_string(
 gflags.DEFINE_string(
     "checkpoint_dir",
     "",
-    "Experiment folder. It will contain" "the saved checkpoints and tensorboard logs.",
+    "Experiment folder. It will containthe saved checkpoints and tensorboard logs.",
 )
 
 # Log parameters
@@ -96,7 +95,7 @@ gflags.DEFINE_integer(
 )
 gflags.DEFINE_string("ckpt_file", "", "Model Checkpoint to be used for testing.")
 gflags.DEFINE_string(
-    "test_partition", "trainval_movobj", "Can be train/val/trainval/trainval_movobj"
+    "test_partition", "trainval", "Can be train/val/trainval/trainval_movobj"
 )
 gflags.DEFINE_string(
     "test_save_dir",
