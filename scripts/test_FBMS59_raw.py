@@ -1,4 +1,3 @@
-#### python
 import os
 import subprocess
 import logging
@@ -12,6 +11,10 @@ def main():
         "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset.zip",
         "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Testset.zip",
     ]
+    model_ckpt_basedir = (
+        "fbms_best_model"  # this is the name under "unsupervised_detection_models"
+    )
+    rootdidr_name = dataset_name
 
     LOG_LEVEL = logging.INFO
     TEST_CROP = 0.9  # FBMS default
@@ -34,7 +37,7 @@ def main():
     model_ckpt_base = os.path.join(
         download_dir,
         "unsupervised_detection_models",
-        "fbms_best_model",
+        model_ckpt_basedir,
         "model.best",
     )  # this will be used as the argument of test_generator.py
     model_ckpt_path = (
@@ -87,7 +90,7 @@ def main():
         f"--flow_ckpt={pwc_ckpt_path}",
         f"--test_crop={TEST_CROP}",
         f"--test_temporal_shift={TEST_TEMPORAL_SHIFT}",
-        f"--root_dir={download_dir}/{dataset_name}",
+        f"--root_dir={download_dir}/{rootdidr_name}",
         f"--test_save_dir={results_dir}",
     ]
     if GENERATE_VISUALIZATION:
