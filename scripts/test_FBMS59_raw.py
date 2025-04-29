@@ -14,7 +14,7 @@ def main():
     model_ckpt_basedir = (
         "fbms_best_model"  # this is the name under "unsupervised_detection_models"
     )
-    rootdidr_name = dataset_name
+    rootdir_name = dataset_name
 
     LOG_LEVEL = logging.INFO
     TEST_CROP = 0.9  # FBMS default
@@ -90,7 +90,7 @@ def main():
         f"--flow_ckpt={pwc_ckpt_path}",
         f"--test_crop={TEST_CROP}",
         f"--test_temporal_shift={TEST_TEMPORAL_SHIFT}",
-        f"--root_dir={download_dir}/{rootdidr_name}",
+        f"--root_dir={download_dir}/{rootdir_name}",
         f"--test_save_dir={results_dir}",
     ]
     if GENERATE_VISUALIZATION:
