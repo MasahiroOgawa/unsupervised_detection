@@ -30,7 +30,7 @@ def main():
     )  # Go up one level from scripts/
     download_dir = os.path.join(base_dir, "download")
     results_dir = os.path.join(base_dir, "results", model_name, dataset_name)
-    foels_resdir = os.path.join(base_dir, "../../..", "output", "davis")
+    foels_resdir = os.path.join(base_dir, "../../..", "output", dataset_name)
 
     # --- Ensure Prerequisites ---
     logging.info(f"--- Checking Prerequisites for {dataset_name} ---")
