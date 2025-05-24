@@ -1,6 +1,7 @@
+import logging
 import os
 import subprocess
-import logging
+
 import download_util
 
 
@@ -18,7 +19,7 @@ def main():
     )  # This is neccesary becuase DAVIS2016 zip top directory is DAVIS and unsupervised training needs root_dir as under DAVIS directory structure.
 
     LOG_LEVEL = logging.INFO
-    TEST_CROP = 0.9  # FBMS default
+    TEST_CROP = 0.9
     TEST_TEMPORAL_SHIFT = 1
     GENERATE_VISUALIZATION = True
     # --- End Fixed Parameters ---

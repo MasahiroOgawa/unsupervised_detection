@@ -1,23 +1,22 @@
+import os
+import sys
+
 import cv2
 import gflags
 import numpy as np
-import os
-import sys
 import scipy.io as sio
 import tensorflow as tf
-from keras.utils.generic_utils import Progbar
-from models.adversarial_learner import AdversarialLearner
-from models.utils.general_utils import (
-    postprocess_mask,
-    postprocess_image,
-    compute_boundary_score,
-)
 from common_flags import FLAGS
+from keras.utils.generic_utils import Progbar
+from models.utils.general_utils import (
+    postprocess_image,
+    postprocess_mask,
+)
 from test_generator import compute_IoU, compute_mae
+
 from data.davis2016_data_utils import Davis2016Reader
 from data.fbms_data_utils import FBMS59Reader
 from data.segtrackv2_data_utils import SegTrackV2Reader
-
 
 des_width = 640
 des_height = 384
@@ -247,6 +246,10 @@ def _test_masks():
 
             progbar.update(step)
 
+        # check processed frames
+        if num_processed_frames == 0:
+            print("No frames processed.FoELS results directory is correct.")
+            return
         # save final result to a text file
         tot_ious = 0
         tot_maes = 0

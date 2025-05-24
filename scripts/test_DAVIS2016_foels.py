@@ -1,6 +1,7 @@
+import logging
 import os
 import subprocess
-import logging
+
 import download_util
 
 
@@ -15,13 +16,15 @@ def main():
         dataset_name + "/DAVIS"
     )  # This is neccesary becuase DAVIS2016 zip top directory is DAVIS and unsupervised training needs root_dir as under DAVIS directory structure.
 
-    LOG_LEVEL = 2
+    LOG_LEVEL = 1
     TEST_CROP = 1.0
     TEST_TEMPORAL_SHIFT = 1
     GENERATE_VISUALIZATION = True
     # --- End Fixed Parameters ---
 
-    logging.basicConfig(level=LOG_LEVEL, format="[%(levelname)s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
 
     # --- Define Paths and URLs ---
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -30,7 +33,7 @@ def main():
     )  # Go up one level from scripts/
     download_dir = os.path.join(base_dir, "download")
     results_dir = os.path.join(base_dir, "results", model_name, dataset_name)
-    foels_resdir = os.path.join(base_dir, "../../..", "output", dataset_name)
+    foels_resdir = os.path.join(base_dir, "../../..", "result", dataset_name)
 
     # --- Ensure Prerequisites ---
     logging.info(f"--- Checking Prerequisites for {dataset_name} ---")
