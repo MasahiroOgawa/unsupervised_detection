@@ -13,14 +13,17 @@ def main():
         "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Trainingset.zip",
         "https://lmb.informatik.uni-freiburg.de/resources/datasets/fbms/FBMS_Testset.zip",
     ]
-    rootdidr_name = dataset_name
-    LOG_LEVEL = 2
+    datarootdir_name = dataset_name
+    LOG_LEVEL = 1
     TEST_CROP = 1.0
     TEST_TEMPORAL_SHIFT = 1
     GENERATE_VISUALIZATION = True
+    TEST_PARTITION = "trainval"
     # --- End Fixed Parameters ---
 
-    logging.basicConfig(level=LOG_LEVEL, format="[%(levelname)s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
 
     # --- Define Paths and URLs ---
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -56,10 +59,11 @@ def main():
         "--batch_size=1",
         f"--test_crop={TEST_CROP}",
         f"--test_temporal_shift={TEST_TEMPORAL_SHIFT}",
-        f"--root_dir={download_dir}/{rootdidr_name}",
+        f"--root_dir={download_dir}/{datarootdir_name}",
         f"--test_save_dir={results_dir}",
         f"--foels_resdir={foels_resdir}",
         f"--log_level={LOG_LEVEL}",
+        f"--test_partition={TEST_PARTITION}",
     ]
     if GENERATE_VISUALIZATION:
         test_command.append("--generate_visualization")
