@@ -256,29 +256,29 @@ def _test_masks():
         tot_ious = 0
         tot_maes = 0
         per_cat_iou = []
-        with open(os.path.join(FLAGS.test_save_dir, "result.txt"), "w") as f:
+        per_cat_mae = []
+        with open(os.path.join(FLAGS.test_save_dir, "result.csv"), "w") as f:
+            print("Category, IoU, MAE", file=f)
             for cat, list_iou in CategoryIou.items():
+                catm_iou = np.mean(list_iou)
+                catm_mae = np.mean(CategoryMae[cat])
                 print(
-                    "Category {}: IoU is {} and MAE is {}".format(
-                        cat, np.mean(list_iou), np.mean(CategoryMae[cat])
-                    ),
+                    f"{cat}, {catm_iou}, {catm_mae}",
                     file=f,
                 )
                 tot_ious += np.sum(list_iou)
                 tot_maes += np.sum(CategoryMae[cat])
-                per_cat_iou.append(np.mean(list_iou))
+                per_cat_iou.append(catm_iou)
+                per_cat_mae.append(catm_mae)
             print(
-                "The Average over the dataset: IoU is {} and MAE is {}".format(
-                    tot_ious / float(num_processed_frames),
-                    tot_maes / float(num_processed_frames),
-                ),
+                f"Average over the dataset, {tot_ious / float(num_processed_frames)}, {tot_maes / float(num_processed_frames)}",
                 file=f,
             )
             print(
-                "The Average over sequences IoU is {}".format(np.mean(per_cat_iou)),
+                f"Average over the sequences, {np.mean(per_cat_iou)}, {np.mean(per_cat_mae)}",
                 file=f,
             )
-            print("Success: Processed {} frames".format(num_processed_frames), file=f)
+            print(f"Success: Processed {num_processed_frames} frames", file=f)
 
 
 def main(argv):
