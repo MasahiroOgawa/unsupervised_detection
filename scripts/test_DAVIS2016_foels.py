@@ -12,7 +12,7 @@ def main():
     dataset_download_urls = [
         "https://graphics.ethz.ch/Downloads/Data/Davis/DAVIS-data.zip",
     ]
-    rootdir_name = (
+    datarootdir_name = (
         dataset_name + "/DAVIS"
     )  # This is neccesary becuase DAVIS2016 zip top directory is DAVIS and unsupervised training needs root_dir as under DAVIS directory structure.
 
@@ -56,7 +56,7 @@ def main():
             f"Evaluation selection file {movobj_eval_source} does not exist. Exiting."
         )
         exit(1)
-    movobj_eval_dest = os.path.join(download_dir, rootdir_name, "JPEGImages", "480p")
+    movobj_eval_dest = os.path.join(download_dir, datarootdir_name, "ImageSets", "480p")
     subprocess.run(
         ["cp", movobj_eval_source, (movobj_eval_dest)],
         check=True,
@@ -73,7 +73,7 @@ def main():
         "--batch_size=1",
         f"--test_crop={TEST_CROP}",
         f"--test_temporal_shift={TEST_TEMPORAL_SHIFT}",
-        f"--root_dir={download_dir}/{rootdir_name}",
+        f"--root_dir={download_dir}/{datarootdir_name}",
         f"--test_save_dir={results_dir}",
         f"--foels_resdir={foels_resdir}",
         f"--log_level={LOG_LEVEL}",
