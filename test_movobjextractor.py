@@ -159,7 +159,9 @@ def _test_masks():
                 # Foels cannot compute optical flow for the last frame,
                 # so if the foels_maskname doesn't exist, skip the frame.
                 if not os.path.exists(foels_maskfname):
-                    print(f"[INFO] Skip the {foels_maskfname}")
+                    print(
+                        f"[INFO] FoELS result mask doesn't exists. Skip the {foels_maskfname}"
+                    )
                     continue
                 generated_mask = get_mask(
                     foels_maskfname, FLAGS.img_width, FLAGS.img_height

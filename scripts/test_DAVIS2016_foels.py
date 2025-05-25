@@ -12,7 +12,7 @@ def main():
     dataset_download_urls = [
         "https://graphics.ethz.ch/Downloads/Data/Davis/DAVIS-data.zip",
     ]
-    rootdidr_name = (
+    rootdir_name = (
         dataset_name + "/DAVIS"
     )  # This is neccesary becuase DAVIS2016 zip top directory is DAVIS and unsupervised training needs root_dir as under DAVIS directory structure.
 
@@ -49,6 +49,19 @@ def main():
         logging.error(f"Failed to prepare dataset {dataset_name}. Exiting.")
         exit(1)
 
+    # copy moving objects evaluation dataset selection file from data/ to Davis data dir
+    movobj_eval_source = os.path.join(base_dir, "data", "trainval_movobj.txt")
+    if not os.path.exists(movobj_eval_source):
+        logging.error(
+            f"Evaluation selection file {movobj_eval_source} does not exist. Exiting."
+        )
+        exit(1)
+    movobj_eval_dest = os.path.join(download_dir, rootdir_name, "JPEGImages", "480p")
+    subprocess.run(
+        ["cp", movobj_eval_source, (movobj_eval_dest)],
+        check=True,
+    )
+
     logging.info("--- Prerequisites Met ---")
 
     # --- Run Test Generator ---
@@ -60,7 +73,7 @@ def main():
         "--batch_size=1",
         f"--test_crop={TEST_CROP}",
         f"--test_temporal_shift={TEST_TEMPORAL_SHIFT}",
-        f"--root_dir={download_dir}/{rootdidr_name}",
+        f"--root_dir={download_dir}/{rootdir_name}",
         f"--test_save_dir={results_dir}",
         f"--foels_resdir={foels_resdir}",
         f"--log_level={LOG_LEVEL}",
