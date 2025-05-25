@@ -20,6 +20,7 @@ def main():
     TEST_CROP = 1.0
     TEST_TEMPORAL_SHIFT = 1
     GENERATE_VISUALIZATION = True
+    TEST_PARTITION = "trainval_movobj"
     # --- End Fixed Parameters ---
 
     logging.basicConfig(
@@ -77,6 +78,7 @@ def main():
         f"--test_save_dir={results_dir}",
         f"--foels_resdir={foels_resdir}",
         f"--log_level={LOG_LEVEL}",
+        f"--test_partition={TEST_PARTITION}",
     ]
     if GENERATE_VISUALIZATION:
         test_command.append("--generate_visualization")
