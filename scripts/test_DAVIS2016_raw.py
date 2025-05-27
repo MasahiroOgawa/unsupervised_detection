@@ -14,19 +14,21 @@ def main():
     model_ckpt_basedir = (
         "davis_best_model"  # this is the name under "unsupervised_detection_models"
     )
-    rootdidr_name = (
+    datarootdir_name = (
         dataset_name + "/DAVIS"
     )  # This is neccesary becuase DAVIS2016 zip top directory is DAVIS and unsupervised training needs root_dir as under DAVIS directory structure.
 
-    LOG_LEVEL = logging.INFO
     TEST_CROP = 0.9
     TEST_TEMPORAL_SHIFT = 1
     GENERATE_VISUALIZATION = True
+    TEST_PARTITION = "trainval_movobj"
     # --- End Fixed Parameters ---
 
-    logging.basicConfig(level=LOG_LEVEL, format="[%(levelname)s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
 
-    # --- Define Paths and URLs for FBMS-59 ---
+    # --- Define Paths and URLs ---
     script_dir = os.path.dirname(os.path.realpath(__file__))
     base_dir = os.path.abspath(
         os.path.join(script_dir, "..")
@@ -61,7 +63,7 @@ def main():
     os.makedirs(download_dir, exist_ok=True)
     os.makedirs(results_dir, exist_ok=True)  # Ensure results dir exists
 
-    # 1. Dataset
+    #  Dataset
     if not download_util.ensure_dataset(
         dataset_name,
         dataset_download_urls,
@@ -70,12 +72,12 @@ def main():
         logging.error(f"Failed to prepare dataset {dataset_name}. Exiting.")
         exit(1)
 
-    # 2. Model Checkpoint
+    # Model Checkpoint
     if not download_util.ensure_model_checkpoint(model_ckpt_zip_url, model_ckpt_path):
         logging.error(f"Failed to prepare model checkpoint {model_ckpt_path}. Exiting.")
         exit(1)
 
-    # 3. PWCNet Checkpoint
+    # PWCNet Checkpoint
     if not download_util.ensure_pwc_checkpoint(pwc_gdown_folder_url, pwc_ckpt_path):
         logging.error(f"Failed to prepare PWCNet checkpoint {pwc_ckpt_path}. Exiting.")
         exit(1)
@@ -92,9 +94,9 @@ def main():
         f"--flow_ckpt={pwc_ckpt_path}",
         f"--test_crop={TEST_CROP}",
         f"--test_temporal_shift={TEST_TEMPORAL_SHIFT}",
-        f"--root_dir={download_dir}/{rootdidr_name}",
+        f"--root_dir={download_dir}/{datarootdir_name}",
         f"--test_save_dir={results_dir}",
-        "--test_partition=trainval_movobj",  # Use trainval partition for testing
+        f"--test_partition={TEST_PARTITION}",
     ]
     if GENERATE_VISUALIZATION:
         test_command.append("--generate_visualization")
