@@ -95,7 +95,7 @@ gflags.DEFINE_integer(
 )
 gflags.DEFINE_string("ckpt_file", "", "Model Checkpoint to be used for testing.")
 gflags.DEFINE_string(
-    "test_partition", "trainval", "Can be train/val/trainval/trainval_movobj"
+    "test_partition", "val", "Can be train/val/trainval/trainval_movobj"
 )
 gflags.DEFINE_string(
     "test_save_dir",
