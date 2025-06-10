@@ -110,11 +110,9 @@ python ./scripts/test_DAVIS2016_raw.py
 
 #### Testing for your own video
 You can even run the inference on your video without annotation.
-1. put your video in download/video/.
-2. edit VIDEO_FILE=<your video file> in scripts/test_video.sh.
-3. run below;
+1. run below;
 ```bash
-bash ./scripts/test_video.sh
+bash ./scripts/test_video.sh <your video file>
 ```
 
 ### Post-Processing

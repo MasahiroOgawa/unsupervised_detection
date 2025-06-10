@@ -3,16 +3,21 @@
 # Script to compute raw results (before post-processing)
 ###
 
-set -e # immediately stop after some errors.
+set -ex # immediately stop after some errors.
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
 # parameter. you can change this to your video file.
-VIDEO_FILE="${SCRIPT_DIR}/../download/video/todaiura_traffic.MOV"
+if [ -n "$1" ]; then
+    VIDEO_FILE="$1"
+else
+    VIDEO_FILE="${SCRIPT_DIR}/../download/video/todaiura_traffic.MOV"
+fi
 
 # fixed parameters
 DOWNLOAD_DIR="${SCRIPT_DIR}/../download"
 CKPT_FILE="${DOWNLOAD_DIR}/unsupervised_detection_models/davis_best_model/model.best"
 PWC_CKPT_FILE="${DOWNLOAD_DIR}/pwcnet-lg-6-2-multisteps-chairsthingsmix/pwcnet.ckpt-595000.data-00000-of-00001"
+VIDEO_BASENAME=$(basename "${VIDEO_FILE%.*}")
 DATASET_DIR="${DOWNLOAD_DIR}/video"
 RESULT_DIR="${SCRIPT_DIR}/../results/video"
 
