@@ -34,8 +34,8 @@ def main():
         os.path.join(script_dir, "..")
     )  # Go up one level from scripts/
     download_dir = os.path.join(base_dir, "download")
-    results_dir = os.path.join(base_dir, "results", model_name, datarootdir_name)
-    foels_resdir = os.path.join(base_dir, "../../..", "result", datarootdir_name)
+    results_dir = os.path.join(base_dir, "results", model_name, dataset_name)
+    foels_resdir = os.path.join(base_dir, "../../..", "result", dataset_name)
 
     # --- Ensure Prerequisites ---
     logging.info(f"--- Checking Prerequisites for {dataset_name} ---")
@@ -52,15 +52,15 @@ def main():
         exit(1)
 
     # copy moving objects evaluation dataset selection file from data/ to Davis data dir
-    movobj_eval_source = os.path.join(base_dir, "data", "trainval_movobj.txt")
-    if not os.path.exists(movobj_eval_source):
+    movobj_evalfile_source = os.path.join(base_dir, "data", "trainval_movobj.txt")
+    if not os.path.exists(movobj_evalfile_source):
         logging.error(
-            f"Evaluation selection file {movobj_eval_source} does not exist. Exiting."
+            f"Evaluation selection file {movobj_evalfile_source} does not exist. Exiting."
         )
         exit(1)
-    movobj_eval_dest = os.path.join(download_dir, datarootdir_name, "ImageSets", "480p")
+    movobj_evalfile_dest = os.path.join(download_dir, datarootdir_name, "ImageSets", "480p")
     subprocess.run(
-        ["cp", movobj_eval_source, (movobj_eval_dest)],
+        ["cp", movobj_evalfile_source, (movobj_evalfile_dest)],
         check=True,
     )
 
